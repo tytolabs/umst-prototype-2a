@@ -1,4 +1,4 @@
-# Known Limitations — IROS 2026 Reproducibility Package
+# Known Limitations — UMST Prototype 2a
 
 ## PPO Training (NaN Gradient Explosion)
 
@@ -20,7 +20,7 @@ See the port assignments table in [REPRODUCE.md](REPRODUCE.md#6-port-assignments
 
 ## Excluded Modules
 
-The following modules are excluded from the reproducibility package because they are not required for reproducing the paper's claims:
+The following modules are excluded from the prototype because they are not required for reproducing the paper's claims:
 
 | Module | Reason for Exclusion |
 |--------|---------------------|
@@ -38,7 +38,7 @@ The following modules are excluded from the reproducibility package because they
 
 ## Scope of Claims
 
-This reproducibility package is scoped to support the specific claims made in the paper. The following clarifies what the package does and does not demonstrate:
+This prototype is scoped to support the specific claims made in the paper. The following clarifies what the package does and does not demonstrate:
 
 **What the package proves:**
 

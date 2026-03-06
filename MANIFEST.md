@@ -3,7 +3,7 @@
 **Paper:** "Towards Unified Material-State Tensors: Epistemic Sensing Architecture for Physics-Constrained Material Characterization"
 **Generated:** 2026-03-05
 **Build verified:** cargo build --release (PASS), ssot_benchmark (PASS — 18,146 samples, 8 datasets, 3 noise levels)
-**Total:** 116 files, ~5.8 MB (excluding build artifacts; paper submitted separately via PaperPlaza)
+**Total:** 116 files, ~5.8 MB (excluding build artifacts)
 
 ## Audit Legend
 

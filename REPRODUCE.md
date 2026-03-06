@@ -1,6 +1,6 @@
-# Reproducing Paper Results — IROS 2026 Reproducibility Package
+# Reproducing Paper Results — UMST Prototype 2a
 
-This document describes how to reproduce the benchmark numbers reported in the IROS 2026 paper.
+This document describes how to reproduce the benchmark numbers reported in the paper.
 
 ## Prerequisites
 

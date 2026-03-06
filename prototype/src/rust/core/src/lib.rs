@@ -12,7 +12,7 @@
 
 //
 // UMST — Material Agnostic Operating System
-// Minimal Core Profile for Reproducibility Package
+// Minimal Core Profile — Prototype 2a
 //
 
 pub mod formulas;
@@ -26,7 +26,7 @@ pub mod sensing;
 pub mod tensors;
 #[cfg(test)]
 pub mod tests_physics;
-// Modules removed from the reproducibility package (not required for paper claims):
+// Modules removed from this release (not required for paper claims):
 // geometry, ibe, ml, neural, oracle, physics, profiler, robotics, search, trust, validation
 
 pub mod epistemic_proxy_selector;

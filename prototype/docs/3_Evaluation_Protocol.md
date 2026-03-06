@@ -1,6 +1,6 @@
 # Evaluation Protocol
 
-> IROS 2026 Reproducibility Package
+> UMST Prototype 2a
 > Paper: "Towards Unified Material-State Tensors: Epistemic Sensing Architecture for Physics-Constrained Material Characterization"
 
 ## 1. Overview
