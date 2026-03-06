@@ -1,0 +1,10 @@
+# Clippy configuration for UMST Core
+# Minimal valid configuration
+
+# Complexity limits
+cognitive-complexity-threshold = 25
+too-many-lines-threshold = 200
+
+# Allow reasonable patterns for scientific computing
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true

@@ -1,0 +1,141 @@
+[package]
+name = "umst-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Santhosh Shyamsundar", "Santosh Prabhu Shenbagamoorthy", "Studio Tyto"]
+description = "Physics-Informed core for Unified Material-State Tensor research."
+license = "CC-BY-4.0"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+petgraph = { version = "0.6", features = ["serde-1"] }
+nalgebra = { version = "0.32", features = ["serde-serialize"] }
+parry3d = "0.13"
+wasm-bindgen = "0.2"
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+# Burn deep-learning framework — CPU-only (ndarray) always compiled;
+# activate 'gpu' feature for wgpu/Metal GPU acceleration.
+burn        = { version = "=0.16.0", default-features = false }
+burn-wgpu   = { version = "=0.16.0", optional = true }
+rand = { version = "0.8", features = ["small_rng"] }
+base64 = "0.22"
+instant = "0.1"
+serde-wasm-bindgen = "0.6"
+csv = "1.2"
+clap = { version = "4.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1.0", features = ["full"] }
+smartcore = "0.4.9"
+rand_distr = "0.4"
+warp = { version = "0.4.2", features = ["websocket", "server"] }
+futures-util = "0.3.32"
+rayon = "1.11.0"
+dotenvy = "0.15.7"
+lazy_static = "1.5.0"
+axum = "0.8.8"
+
+[features]
+default = ["ndarray"]
+ndarray = ["burn/ndarray"]
+gpu = ["burn-wgpu"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# ── Active binaries ──────────────────────────────────────────────────────────
+# Core infrastructure
+[[bin]]
+name = "gate_server"
+path = "src/bin/gate_server.rs"
+
+# Theorem experiments (paper-facing, each owns a verified theorem)
+[[bin]]
+name = "epistemic_experiment"
+path = "src/bin/epistemic_experiment.rs"
+
+[[bin]]
+name = "veto_experiment"
+path = "src/bin/veto_experiment.rs"
+
+[[bin]]
+name = "hardware_heat_experiment"
+path = "src/bin/hardware_heat_experiment.rs"
+
+# Benchmarks
+[[bin]]
+name = "ssot_benchmark"
+path = "src/bin/ssot_benchmark.rs"
+
+[[bin]]
+name = "pareto_design_benchmark"
+path = "src/bin/pareto_design_benchmark.rs"
+
+[[bin]]
+name = "constitution_rejection_rate"
+path = "src/bin/constitution_rejection_rate.rs"
+
+# Physics utilities
+[[bin]]
+name = "thermodynamic_gate"
+path = "src/bin/thermodynamic_gate.rs"
+
+[[bin]]
+name = "physics_compute"
+path = "src/bin/physics_compute.rs"
+
+# Focused Agency-Pyramid benchmarks (split by theoretical jurisdiction)
+[[bin]]
+name = "benchmark_p4_landauer_scale"
+path = "src/bin/benchmark_p4_landauer_scale.rs"
+
+[[bin]]
+name = "benchmark_p3_agency_pyramid"
+path = "src/bin/benchmark_p3_agency_pyramid.rs"
+
+[[bin]]
+name = "benchmark_p3_extrapolative"
+path = "src/bin/benchmark_p3_extrapolative.rs"
+
+[[bin]]
+name = "benchmark_phase_o_sensor_fusion"
+path = "src/bin/benchmark_phase_o_sensor_fusion.rs"
+
+[[bin]]
+name = "benchmark_phase_q_continual_learning"
+path = "src/bin/benchmark_phase_q_continual_learning.rs"
+
+[[bin]]
+name = "benchmark_phase_p_gpu_scale"
+path = "src/bin/benchmark_phase_p_gpu_scale.rs"
+
+# Constitutional gate CLI (essential)
+[[bin]]
+name = "egoff_cli"
+path = "src/bin/egoff_cli.rs"
+
+# PPO inference server
+[[bin]]
+name = "ppo_server"
+path = "src/bin/ppo_server.rs"
+
+# Additional benchmarks
+[[bin]]
+name = "benchmark_proof_of_claim"
+path = "src/bin/benchmark_proof_of_claim.rs"
+
+[[bin]]
+name = "egoff_constrain"
+path = "src/bin/egoff_constrain.rs"
+
+[[bin]]
+name = "path_b_benchmark"
+path = "src/bin/path_b_benchmark.rs"
+
+[[bin]]
+name = "path_b_multi_shot"
+path = "src/bin/path_b_multi_shot.rs"
+
+[[bin]]
+name = "rapl_measure"
+path = "src/bin/rapl_measure.rs"

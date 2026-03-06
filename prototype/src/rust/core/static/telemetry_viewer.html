@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUMSTO XR Telemetry Twin</title>
+    <!-- Importing Three.js via CDN to keep the prototype self-contained without Node/npm -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        #dashboard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 150, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .connected {
+            background: #00ffaa;
+            box-shadow: 0 0 8px #00ffaa;
+        }
+
+        .disconnected {
+            background: #ff3333;
+            box-shadow: 0 0 8px #ff3333;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: #88ccff;
+        }
+
+        .veto-warning {
+            color: #ff3333;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboard">
+        <div class="header">
+            <span>LIVE DUMSTO XR</span>
+            <div id="status-indicator" class="status-dot disconnected"></div>
+        </div>
+        <div class="metric-row">
+            <span>Hydration (α)</span>
+            <span id="metric-alpha" class="metric-value">0.00%</span>
+        </div>
+        <div class="metric-row">
+            <span>Physics Strength</span>
+            <span id="metric-str" class="metric-value">0.0 MPa</span>
+        </div>
+        <div class="metric-row">
+            <span>Structural Bound</span>
+            <span id="metric-bound" class="metric-value">0.0 MPa</span>
+        </div>
+        <div id="logic-verdict" class="veto-warning" style="display: none;">THERMODYNAMIC VETO</div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script>
+        // 1. Three.js Initialization Setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050510, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1.5);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        // 2. Mock 35-Node Architectural Topology
+        const nodes = [];
+        const edges = [];
+        const nodeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.3 });
+
+        // Generate Nodes
+        for (let i = 0; i < 35; i++) {
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x2288ff,
+                emissive: 0x114488,
+                emissiveIntensity: 0.5,
+                wireframe: false
+            });
+            const mesh = new THREE.Mesh(nodeGeometry, material);
+
+            // Random spherical distribution
+            mesh.position.set(
+                (Math.random() - 0.5) * 12,
+                (Math.random() - 0.5) * 12,
+                (Math.random() - 0.5) * 12
+            );
+
+            scene.add(mesh);
+            nodes.push({ mesh, material });
+        }
+
+        // Generate Edges (Sparse connectivity)
+        for (let i = 0; i < 35; i++) {
+            for (let j = i + 1; j < 35; j++) {
+                if (Math.random() > 0.88) {
+                    const geometry = new THREE.BufferGeometry().setFromPoints([
+                        nodes[i].mesh.position,
+                        nodes[j].mesh.position
+                    ]);
+                    const line = new THREE.Line(geometry, lineMaterial);
+                    scene.add(line);
+                    edges.push(line);
+                }
+            }
+        }
+
+        // 3. Animation Loop
+        let globalHydration = 0;
+        let isAdmissible = true;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the entire graph gently
+            scene.rotation.x += 0.001 + (globalHydration * 0.002);
+            scene.rotation.y += 0.002 + (globalHydration * 0.002);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 4. WebSocket Telemetry Integration
+        const statusIndicator = document.getElementById('status-indicator');
+        const metricAlpha = document.getElementById('metric-alpha');
+        const metricStr = document.getElementById('metric-str');
+        const metricBound = document.getElementById('metric-bound');
+        const vetoWarning = document.getElementById('logic-verdict');
+
+        function connectTelemetry() {
+            // We use standard 8766 mapped on localhost by the gate_server
+            const ws = new WebSocket('ws://' + window.location.hostname + ':8766/telemetry');
+
+            ws.onopen = () => {
+                statusIndicator.className = 'status-dot connected';
+                console.log("Sim2Real Telemetry Stream Connected.");
+            };
+
+            ws.onclose = () => {
+                statusIndicator.className = 'status-dot disconnected';
+                setTimeout(connectTelemetry, 2000); // Auto-reconnect
+            };
+
+            ws.onerror = (err) => console.error("WebSocket Error:", err);
+
+            ws.onmessage = (event) => {
+                try {
+                    const state = JSON.parse(event.data);
+
+                    // Update DOM metrics
+                    globalHydration = state.hydration_degree || 0;
+                    isAdmissible = state.admissible;
+
+                    metricAlpha.innerText = (globalHydration * 100).toFixed(1) + '%';
+                    metricStr.innerText = (state.physics_strength || 0).toFixed(1) + ' MPa';
+                    metricBound.innerText = (state.strength_bound || 0).toFixed(1) + ' MPa';
+
+                    if (!isAdmissible) {
+                        vetoWarning.style.display = 'block';
+                        vetoWarning.innerText = state.verdict || "THERMODYNAMIC VETO";
+                    } else {
+                        vetoWarning.style.display = 'none';
+                    }
+
+                    // Map mathematical state to WebGL Topology
+                    const targetColor = new THREE.Color();
+                    if (!isAdmissible) {
+                        targetColor.setHex(0xff0000); // Red shatter state
+                    } else {
+                        // Blue (0) to Red (1) gradient based on hydration
+                        targetColor.setRGB(globalHydration, 0.3, 1 - globalHydration * 0.5);
+                    }
+
+                    // Update nodes
+                    nodes.forEach(node => {
+                        node.material.color.lerp(targetColor, 0.1);
+                        node.material.emissive.copy(node.material.color).multiplyScalar(0.5);
+                        node.material.wireframe = !isAdmissible;
+                    });
+
+                    // Update edges (GAT paths glow based on hydration)
+                    lineMaterial.opacity = 0.2 + (globalHydration * 0.6);
+                    if (globalHydration > 0.5) lineMaterial.color.setHex(0xffaaaa);
+                    else lineMaterial.color.setHex(0x93c5fd);
+
+                } catch (e) {
+                    console.error("Failed to parse DUMSTO JSON payload", e);
+                }
+            };
+        }
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize connection
+        connectTelemetry();
+    </script>
+</body>
+
+</html>

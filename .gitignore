@@ -1,0 +1,11 @@
+# OS files
+.DS_Store
+**/.DS_Store
+
+# Build artifacts
+prototype/src/rust/target/
+
+# Editor files
+.vscode/
+*.swp
+*.swo
