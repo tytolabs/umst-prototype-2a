@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! State and Action definitions for RL agent
 //!
 //! State Space: 35 dimensions (27 proxies + 6 simulation outputs + 2 weather)

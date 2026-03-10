@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Elastic Weight Consolidation (EWC) for Continual Learning
 //!
 //! Prevents Catastrophic Forgetting (CF) in the GNN-PPO Agent. After training on

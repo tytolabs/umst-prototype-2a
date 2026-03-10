@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! DUMSTO-Pyramid — Full Agency Hierarchy Benchmark
 //!
 //! Validates the 9-layer Functorial Constitutional Mediation Hierarchy (Paper 3)

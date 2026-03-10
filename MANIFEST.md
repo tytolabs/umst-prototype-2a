@@ -159,7 +159,7 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 |------|------|-------|--------|
 | `prototype/src/rust/Cargo.toml` | 160B | [ATTR][I/O] | PASS — workspace, core-only member |
 | `prototype/src/rust/Cargo.lock` | — | [I/O] | PASS — pinned dependency versions for reproducibility |
-| `prototype/src/rust/core/Cargo.toml` | 2.9K | [ATTR][I/O] | PASS — named authors, license CC-BY-4.0 |
+| `prototype/src/rust/core/Cargo.toml` | 2.9K | [ATTR][I/O] | PASS — named authors, license MIT |
 | `prototype/src/rust/core/clippy.toml` | 271B | [QUALITY] | PASS |
 | `prototype/src/rust/core/static/telemetry_viewer.html` | 9.4K | [I/O] | PASS — compile-time include |
 
@@ -176,7 +176,7 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 |------|------|-------|--------|
 | `README.md` | 5.9K | [ATTR][FORMAT] | PASS — package overview, quickstart |
 | `MANIFEST.md` | 12.6K | [ATTR][FORMAT] | PASS — this file; complete audit manifest |
-| `LICENSE` | 1.4K | [ATTR] | PASS — CC-BY 4.0, named authors |
+| `LICENSE` | 1.4K | [ATTR] | PASS — MIT, named authors |
 | `REPRODUCE.md` | 1.7K | [TRUTH][FORMAT] | PASS — build + run instructions |
 | `KNOWN_LIMITATIONS.md` | 2.0K | [TRUTH] | PASS — PPO NaN, calibration caveats match code |
 | `requirements.txt` | 321B | [QUALITY] | PASS — numpy, matplotlib, pandas, litellm |
@@ -194,7 +194,7 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 | `cargo build --release` | PASS (warnings only, no errors) |
 | `ssot_benchmark` runs from package | PASS (18,146 samples, 3 noise levels) |
 | Data paths (`../../../data/`) | PASS (resolves correctly) |
-| SPDX and attribution compliance | PASS (CC-BY-4.0 headers on all source files) |
+| SPDX and attribution compliance | PASS (MIT headers on all source files) |
 | Total files | 116 |
 | Package size | ~5.8 MB |
 

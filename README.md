@@ -33,7 +33,7 @@ concrete and cementitious material families.
 ```
 umst-prototype-2a/
 ├── README.md                  # This file
-├── LICENSE                    # CC-BY 4.0 License
+├── LICENSE                    # MIT License
 ├── MANIFEST.md                # Complete file manifest with audit tags
 ├── REPRODUCE.md               # Step-by-step reproduction instructions
 ├── KNOWN_LIMITATIONS.md       # Known limitations and scope
@@ -44,6 +44,8 @@ umst-prototype-2a/
 │   ├── results/               # Canonical result tables
 │   ├── scripts/               # Python analysis and plotting scripts
 │   └── src/rust/              # Rust physics kernel (27,542 LOC)
+│       └── core/src/tensors/kleisli.rs  # KleisliArrow admissibility monad
+└── ros2_bridge/               # ROS2 bridge (Python nodes → REST/WS → Rust gate)
 ```
 
 ## Quick Start
@@ -82,15 +84,21 @@ For the full reproduction workflow (all experiments, tables, and figures), see
 
 ## Essential Binaries
 
-After building, five binaries are available in `prototype/src/rust/target/release/`:
+After building, six binaries are available in `prototype/src/rust/target/release/`:
 
 | Binary                    | Purpose                                      |
 |--------------------------|----------------------------------------------|
 | `ssot_benchmark`         | Primary material-state tensor benchmark      |
+| `gate_server`            | REST/WebSocket gate server (port 8765/8766)  |
 | `epistemic_experiment`   | Epistemic sensing / sensor selection          |
 | `veto_experiment`        | Thermodynamic admissibility veto gate         |
 | `hardware_heat_experiment` | Hardware-in-the-loop heat validation        |
 | `egoff_cli`              | EGoFF composition and analysis CLI            |
+
+### ROS2 Bridge
+
+The `ros2_bridge/` directory provides a ROS2 Python package that bridges
+the gate server to ROS2 topics. See `ros2_bridge/README.md` for setup.
 
 ## Key Results
 
@@ -155,4 +163,4 @@ corrections at the functor level.
 
 Copyright (c) 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto.
 
-This work is licensed under the Creative Commons Attribution 4.0 International License (CC-BY 4.0). See [LICENSE](LICENSE) for details.
+This work is licensed under the MIT License. See [LICENSE](LICENSE) for details.

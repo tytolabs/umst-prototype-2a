@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Epistemic Uncertainty Module for Quantum Active Inference
 //!
 //! Implements mutual information estimation and epistemic exploration bonuses

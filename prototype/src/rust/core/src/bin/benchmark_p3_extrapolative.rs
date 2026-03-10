@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! DUMSTO-Pyramid — Extrapolative Episodic Training (Phase M3)
 //!
 //! Evaluates ZERO-SHOT Out-Of-Distribution (OOD) Generalisation using Martian Regolith.

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Phase O Benchmark: Sensor Fusion — 50-Seed Monte Carlo Statistical Validation
 //!
 //! Produces publishable evidence that EKF-PPO outperforms Raw-PPO under 20% IoT Gaussian noise.

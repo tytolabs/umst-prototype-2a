@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 
 //! ColorMath implementation (Kubelka-Munk theory) for UMST Core.
 //! Calculates theoretical reflectance and sRGB values from material mixtures.

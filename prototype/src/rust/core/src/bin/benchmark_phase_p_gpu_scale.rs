@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Phase P Benchmark: GPU Tensor Acceleration
 //!
 //! Validates that burn Tensor operations on GPU (Metal/wgpu on Apple Silicon)

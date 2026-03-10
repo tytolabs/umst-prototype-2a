@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Extended Kalman Filter (EKF) for Non-Linear Sensor Fusion
 //!
 //! Reconstructs the true hidden physical state (Yield Stress, Plastic Viscosity, Temperature)

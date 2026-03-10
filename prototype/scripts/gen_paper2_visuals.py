@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-# SPDX-License-Identifier: CC-BY-4.0
+# SPDX-License-Identifier: MIT
 
 """
 Paper 2 — Publication-Quality Visualizations

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Empirical Constitutional Rejection Rate Benchmark (Exp 3 Dependency)
 //!
 //! Randomly samples 10,000 physical proposals (torque, flow, clogging)

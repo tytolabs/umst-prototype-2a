@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 
 //! A generic 4th-order Runge-Kutta (RK4) ODE solver for continuous-time integration.
 //! This allows neural networks and physics engines to evaluate continuous flow

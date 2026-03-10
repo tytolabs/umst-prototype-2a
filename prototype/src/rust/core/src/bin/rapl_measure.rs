@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! rapl_measure — Minimal CLI energy sampler for Python interop.
 //!
 //! Wraps `PowermetricsSampler::monitor()` (the same trapezoidal-integration path

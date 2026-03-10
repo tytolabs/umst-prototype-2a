@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Phase Q Benchmark: Continual Learning — 50-Seed Monte Carlo Statistical Validation
 //!
 //! Upgrades the single-run EWC proof to a full N=50 paired experiment:

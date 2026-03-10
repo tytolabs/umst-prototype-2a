@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 //!
 //! Thermodynamic Gate CLI Binary

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Exp 3: DUMSTO-LandauerMark — Hardware Thermal Proof (Paper 4)
 //!
 //! Proves that a DUMSTO-gated (constitutionally constrained) inference engine

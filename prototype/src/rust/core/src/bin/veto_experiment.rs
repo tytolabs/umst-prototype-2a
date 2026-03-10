@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 //! Exp 2: Sequential Autopoiesis & The Axiological Veto (Paper 3)
 //!
 //! Simulates a 3D concrete printer nozzle extruding material.

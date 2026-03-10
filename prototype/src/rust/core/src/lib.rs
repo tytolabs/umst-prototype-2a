@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
-// SPDX-License-Identifier: CC-BY-4.0
+// SPDX-License-Identifier: MIT
 #![allow(clippy::new_without_default)]
 #![allow(clippy::manual_clamp)]
 #![allow(clippy::too_many_arguments)]

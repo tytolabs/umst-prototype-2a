@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Santhosh Shyamsundar", "Santosh Prabhu Shenbagamoorthy", "Studio Tyto"]
 description = "Physics-Informed core for Unified Material-State Tensor research."
-license = "CC-BY-4.0"
+license = "MIT"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
