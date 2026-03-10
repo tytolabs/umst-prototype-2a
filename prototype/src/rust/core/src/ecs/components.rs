@@ -56,7 +56,7 @@ pub struct EpistemicStateComponent {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Exp 2: 3D Concrete Printer Simulation (Paper 3 — Axiological Veto)
+// Exp 2: 3D Concrete Printer Simulation (Axiological Veto)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Motor state for the extrusion drive mechanism.

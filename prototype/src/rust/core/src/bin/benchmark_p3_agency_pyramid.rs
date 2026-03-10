@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 //! DUMSTO-Pyramid — Full Agency Hierarchy Benchmark
 //!
-//! Validates the 9-layer Functorial Constitutional Mediation Hierarchy (Paper 3)
+//! Validates the 9-layer Functorial Constitutional Mediation Hierarchy
 //! from the physical substrate up to creative design and robustness.
 //!
-//! Architecture vs DUMSTO-LandauerMark (Paper 4):
+//! Architecture vs DUMSTO-LandauerMark:
 //!   `LandauerMark`  → drills vertically through L0 only (bit → thermal).
 //!   DUMSTO-Pyramid → sweeps horizontally across L0 → L4 of the agency pyramid.
 //!
@@ -21,7 +21,7 @@
 //!   GPU compute     — needs `metal` crate; current GPU = idle background only
 //!
 //! I/O contract:
-//!   Output — `TABLE_paper3_agency.csv`
+//!   Output — `TABLE_agency_benchmark.csv`
 //!   Exit   — 0 on success, 1 on any fatal I/O error
 //!
 //! Run:  sudo cargo run --release --bin `benchmark_p3_agency_pyramid`
@@ -703,7 +703,7 @@ fn print_summary(obs: &[Obs]) {
 /// Maps from the benchmark's binary/continuous Obs records to the
 /// `PyramidMeasurements` struct used by `constitution::dcs_from_pyramid`.
 /// This is the bridge between the existing benchmarking infrastructure
-/// and the new graded DCS framework (Paper 3, Section 5.4).
+/// and the graded DCS framework.
 fn compute_and_print_dcs(obs: &[Obs]) {
     use umst_core::constitution::{dcs_from_pyramid, PyramidMeasurements};
 
@@ -765,7 +765,7 @@ fn write_csv(obs: &[Obs], path: &str) -> std::io::Result<()> {
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    const OUTPUT: &str = "TABLE_paper3_agency.csv";
+    const OUTPUT: &str = "TABLE_agency_benchmark.csv";
 
     println!("╔═══════════════════════════════════════════════════════════════════════════╗");
     println!("║      DUMSTO-Pyramid — Meaningful Convergence Hierarchy Benchmark          ║");
@@ -807,7 +807,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     print_summary(&obs);
 
-    // ── DCS / CGS computation (Paper 3, Section 5.4) ─────────────────────────
+    // ── DCS / CGS computation ─────────────────────────────────────────────────
     println!();
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DUMSTO CONSTITUTIONAL SCORE");
     compute_and_print_dcs(&obs);

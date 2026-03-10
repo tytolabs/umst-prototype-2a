@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 // SPDX-License-Identifier: MIT
 
-//! The 9-Layer Constitutional Core (Paper 3 — v2.0, Volumetric Expansion)
+//! The 9-Layer Constitutional Core (v2.0, Volumetric Expansion)
 //!
 //! Encodes the functorial mathematical hierarchy directly into the Rust type system.
 //! If an action violates higher-level structures (like Thermodynamics), it must fail
 //! to compile or return a hard `Err()` preventing execution.
 //!
-//! New in v2.0 (Paper 3, Section 5.4):
+//! New in v2.0:
 //!   - DUMSTO Constitutional Score (DCS): graded 0–100 linear score
 //!   - Constitutional Grounding Scale (CGS): mapped 1–10 from DCS
 //!   - Per-layer subscores with documented weight rationale
@@ -91,7 +91,7 @@ pub fn execute_constitutional_functor<T: AxiologicalFloor>(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DUMSTO Constitutional Score (DCS) — Paper 3, Section 5.4
+//  DUMSTO Constitutional Score (DCS)
 //
 //  DCS ∈ [0, 100]. Weighted sum of per-layer normalised subscores.
 //  CGS = 1 + 9 * DCS / 100, mapping to [1, 10].
@@ -278,7 +278,7 @@ pub fn growth_vector(dcs_t0: f64, dcs_t1: f64, dt_steps: f64) -> f64 {
 }
 
 /// CGS from a raw admissible volume ratio v/v_max.
-/// Implements CGS(V) = 1 + 9/ln(1+V_max) * ln(1+V) from Paper 3 / Paper 5.
+/// Implements CGS(V) = 1 + 9/ln(1+V_max) * ln(1+V).
 ///
 /// Both `v` and `v_max` should be in the same units (arbitrary; ratio matters).
 pub fn cgs_from_volume(v: f64, v_max: f64) -> f64 {

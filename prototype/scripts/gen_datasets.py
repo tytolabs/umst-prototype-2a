@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Generate 4 physically calibrated synthetic concrete datasets for Paper 2
+Generate 4 physically calibrated synthetic concrete datasets for
 multi-dataset validation.
 
 Datasets (each ~500 samples, CSV, schema matching UCI + source field):
@@ -140,7 +140,7 @@ def write_dataset(name, rows, path):
     print(f"  {name}: {len(rows)} samples → {path}")
 
 if __name__ == '__main__':
-    print("Generating Paper 2 multi-domain concrete datasets…")
+    print("Generating multi-domain concrete datasets…")
     datasets = [
         ('DS_UHPC',     gen_uhpc(500),     os.path.join(DATA_DIR,'dataset_uhpc.csv')),
         ('DS_SELFHEAL', gen_selfheal(500), os.path.join(DATA_DIR,'dataset_selfheal.csv')),

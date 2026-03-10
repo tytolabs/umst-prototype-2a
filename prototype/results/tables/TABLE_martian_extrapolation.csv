@@ -1,0 +1,3 @@
+method,target_mpa,predicted_mpa,predicted_yield_stress,is_hallucination,physics_bound_respected
+smartcore_rf_unconstrained,40,33.78,-210.00,true,false
+dumsto_gnn_ppo,40,0.88,58.00,false,true

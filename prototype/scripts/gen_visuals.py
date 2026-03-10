@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: MIT
 
 """
-Paper 2 — Publication-Quality Visualizations
-Generates all 5 figures for the SSOT and the LaTeX paper.
+UMST — Publication-Quality Visualizations
+Generates all 5 figures for the SSOT benchmark.
 
-Outputs (reports/visuals/paper2/):
+Outputs (reports/visuals/):
   fig1_tq_curves.pdf        — TQ accumulation curves (epistemic vs random, per domain)
   fig2_auc_bar.pdf          — AUC gain bar chart (all 6 datasets)
   fig3_cohens_d_bar.pdf     — Per-domain Cohen's d bar chart
@@ -24,7 +24,7 @@ import numpy as np
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent  # umst-prototype_2/src/rust/core
-OUT  = ROOT / "reports" / "visuals" / "paper2"
+OUT  = ROOT / "reports" / "visuals"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # ── Style ─────────────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ plt.rcParams.update({
 })
 
 # ── Data from v4 JSON ─────────────────────────────────────────────────────────
-# v4 per-domain results (from reports/paper2_v4_final_1772040949.json)
+# v4 per-domain results (from results/epistemic_v4_final_*.json)
 DOMAINS = ["UCI-D1", "UCI-D2", "UCI-D3", "UCI-D4", "UHPC", "SELFHEAL", "LUNAR", "HIGHSCM"]
 EP_TQ   = [0.6856, 0.8316, 0.8316, 0.8316, 0.8316, 0.8316, 0.8316, 0.8316]  # per SSOT
 RND_TQ  = [0.4286, 0.4286, 0.4286, 0.4286, 0.4286, 0.4286, 0.4286, 0.4286]  # TQ@4 interpolated below
@@ -183,7 +183,7 @@ print("✓ fig3_cohens_d_bar.pdf")
 
 # ── Fig 4: C6 Phase T (ZOH vs ODE) with training loss inset ──────────────────
 # Load v6 CSV
-v6_csv = sorted((ROOT / "reports").glob("paper2_phase_t_v6_*.csv"))[-1]
+v6_csv = sorted((ROOT / "results").glob("epistemic_phase_t_v6_*.csv"))[-1]
 rows = list(csv.DictReader(v6_csv.open()))
 
 macros = sorted(set(int(r['macro']) for r in rows))
@@ -195,7 +195,7 @@ for r in rows:
     ode_all.append(float(r['ode']))
 
 # Training loss (from v6 summary JSON)
-v6_json = sorted((ROOT / "reports").glob("paper2_phase_t_v6_summary_*.json"))[-1]
+v6_json = sorted((ROOT / "results").glob("epistemic_phase_t_v6_summary_*.json"))[-1]
 jdata = json.loads(v6_json.read_text())
 loss_log = jdata['training']['loss_log']
 epochs = [x[0] for x in loss_log]

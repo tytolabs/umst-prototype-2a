@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 // SPDX-License-Identifier: MIT
-//! Exp 3: DUMSTO-LandauerMark — Hardware Thermal Proof (Paper 4)
+//! Exp 3: DUMSTO-LandauerMark — Hardware Thermal Proof
 //!
 //! Proves that a DUMSTO-gated (constitutionally constrained) inference engine
 //! produces measurably lower per-operation energy consumption than an unconstrained
@@ -132,7 +132,7 @@ fn welch_t_test_onesided(a: &[f64], b: &[f64]) -> (f64, f64) {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╔═══════════════════════════════════════════════════════════════════════════╗");
-    println!("║  DUMSTO: Exp 3 – LandauerMark: Hardware Thermal Proof (Paper 4)           ║");
+    println!("║  DUMSTO: Exp 3 – LandauerMark: Hardware Thermal Proof                      ║");
     println!("╚═══════════════════════════════════════════════════════════════════════════╝");
     println!();
 
@@ -275,7 +275,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _per_op_delta = per_op_u - per_op_c;
 
     println!();
-    println!("🔬 Theorem Validation (Exp 3 — Paper 4):");
+    println!("🔬 Theorem Validation (Exp 3 — LandauerMark):");
     println!(
         "   ΔE (Landauer reduction): {:.4} µJ ({:.1}% less energy)",
         delta_uj, delta_pct
@@ -292,7 +292,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         p7
     );
 
-    // Theorem 8: within plausible range of Paper 4 claim (1.5 mW @ 1 MHz → 1.5e-3 µJ/op)
+    // Theorem 8: within plausible range (1.5 mW @ 1 MHz → 1.5e-3 µJ/op)
     let predicted = 1.5e-3;
     let in_range = delta_uj > predicted * 0.01 && delta_uj < predicted * 1e8;
     println!(

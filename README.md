@@ -1,5 +1,7 @@
 # UMST Prototype 2a: Epistemic Sensing Architecture
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18940933.svg)](https://doi.org/10.5281/zenodo.18940933)
+
 **Towards Unified Material-State Tensors: Epistemic Sensing Architecture for Physics-Constrained Material Characterization**
 
 Santhosh Shyamsundar and Santosh Prabhu Shenbagamoorthy — Studio Tyto, Chennai, India

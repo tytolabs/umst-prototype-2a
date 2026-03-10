@@ -121,7 +121,7 @@ pub struct EpistemicPPOModule {
     bound_violations: u64,
     convergent_steps: u64,
 
-    /// Bidirectional rho vector (Paper 2 & 5: Volumetric Growth).
+    /// Bidirectional rho vector (Volumetric Growth).
     /// rho.0: rho_up (Exploration/Abstraction yield)
     /// rho.1: rho_down (Grounding/Conservative yield)
     rho: (f64, f64),
@@ -162,7 +162,7 @@ impl EpistemicPPOModule {
 
     /// Process a transition and compute epistemic bonuses via FEP minimization.
     ///
-    /// FORMULATION (Paper 2):
+    /// FORMULATION:
     /// Minimize Expected Free Energy G(π) = E[D(Q(ψ||o)||P(ψ))] - I_Q[ψ;o]
     /// where Complexity (D_KL) acts as a dissipative force (rho_down)
     /// and Accuracy (MI) acts as a constructive force (rho_up).

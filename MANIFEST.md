@@ -167,8 +167,8 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 
 | File | Size | Audit | Status |
 |------|------|-------|--------|
-| `prototype/scripts/gen_paper2_datasets.py` | 8.2K | [I/O][QUALITY][ATTR] | PASS |
-| `prototype/scripts/gen_paper2_visuals.py` | 13K | [I/O][QUALITY][ATTR] | PASS |
+| `prototype/scripts/gen_datasets.py` | 8.2K | [I/O][QUALITY][ATTR] | PASS |
+| `prototype/scripts/gen_visuals.py` | 13K | [I/O][QUALITY][ATTR] | PASS |
 
 ## Documentation (10 files)
 

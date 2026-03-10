@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 // SPDX-License-Identifier: MIT
-//! Paper 2 — Final Convergence Benchmark (v4)
+//! Epistemic Sensing — Final Convergence Benchmark (v4)
 //!
 //! ## Improvements over v3
 //! 1. **N = 1000 trials** per dataset (vs 500) → 6000 total → tighter 95% CIs
@@ -470,7 +470,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("╔═══════════════════════════════════════════════════════════════════════════╗");
     println!(
-        "║    Paper 2 — Final Convergence Benchmark (v4, {N_TRIALS}/ds, 5-fold CV R², Rayon)  ║"
+        "║    Epistemic Sensing — Final Convergence Benchmark (v4, {N_TRIALS}/ds, 5-fold CV)   ║"
     );
     println!("╚═══════════════════════════════════════════════════════════════════════════╝");
 
@@ -660,7 +660,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Print ──────────────────────────────────────────────────────────────
     println!();
     println!("╔═══════════════════════════════════════════════════════════════════════════╗");
-    println!("║           Paper 2 — Final Convergence Benchmark v4 Results               ║");
+    println!("║       Epistemic Sensing — Final Convergence Benchmark v4 Results           ║");
     println!("╠═══════════════════════════════════════════════════════════════════════════╣");
     println!(
         "║ C1 [UCI-D1]  ep_TQ={uci_ep_tq_m:.4}  rnd_TQ={uci_rnd_tq_m:.4}  (≥0.617) {}",
@@ -703,7 +703,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if c5_pass { "✅" } else { "⚠️" });
     println!("╠═══════════════════════════════════════════════════════════════════════════╣");
     println!("║ C6           Phase T residual corrector: ZOH=0.149  ODE=0.023  −84.7%   ✅");
-    println!("║              (see reports/paper2_phase_t_v5_summary_*)");
+    println!("║              (see results/convergence_curves.json)");
     println!("╠═══════════════════════════════════════════════════════════════════════════╣");
     println!(
         "║ C7           ca_TQ/ep_TQ={ca_pct:.1}%  (≥92%)  effort_reduction={:.1}%  {}",
@@ -753,17 +753,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }).collect::<Vec<_>>(),
             "pass": c5_pass
         },
-        "C6": { "see": "reports/paper2_phase_t_v5_summary_*",
+        "C6": { "see": "results/convergence_curves.json",
                 "reduction_pct": 84.7, "zoh_mae": 0.149, "ode_mae": 0.023, "pass": true },
         "C7": { "ca_pct_of_ep": ca_pct, "avg_effort": ca_eff_m, "pass": ca_pct >= 92.0 },
         "C8": { "uci_cement_first_pct": uci_cement_pct, "pass": c8_pass },
         "bcs_theorem": { "violations": 0, "landauer_max_var": 0.013, "pass": true }
     });
 
-    let json_path = format!("reports/paper2_v4_final_{ts}.json");
+    let json_path = format!("results/epistemic_v4_final_{ts}.json");
     fs::write(&json_path, serde_json::to_string_pretty(&summary)?)?;
 
-    let csv_path = format!("reports/paper2_v4_trials_{ts}.csv");
+    let csv_path = format!("results/epistemic_v4_trials_{ts}.csv");
     let mut csv_f = File::create(&csv_path)?;
     writeln!(csv_f, "dataset,trial,ep_tq,rnd_tq,ep_auc,rnd_auc,ep_steps,rnd_steps,ep_r2_cv,rnd_r2_cv,ca_tq,ca_effort,cement_first")?;
     for (di, dsr) in ds_results.iter().enumerate() {

@@ -886,7 +886,7 @@ fn train_ppo_agent(records: &[Record], cal: &Calibration, agent: &mut PPOAgent, 
 
     // MetaStats CSV sink — tracks the meta-learning trajectory per epoch.
     // Provides episodic data on entropy, epsilon, gate rejection rate, and
-    // GAT attention coherence for Paper 5 / meta-learning analysis figures.
+    // GAT attention coherence for meta-learning analysis.
     let meta_csv_path = "../../../results/canonical/tables/meta_trajectory.csv";
     let mut meta_rows: Vec<String> = vec![
         "epoch,step,entropy_coef,epsilon,avg_reward,reward_variance,gate_reject_rate,attn_coherence".to_string()
@@ -1271,7 +1271,7 @@ fn main() {
 
     let start = Instant::now();
 
-    // Dataset paths (updated for Paper 2 Phase 12 Omni-Benchmark)
+    // Dataset paths (Phase 12 Omni-Benchmark)
     let datasets = [
         ("UCI-D1", "Standard", "../../../data/dataset_D1.csv"),
         ("UCI-D2", "Extended", "../../../data/dataset_D2.csv"),

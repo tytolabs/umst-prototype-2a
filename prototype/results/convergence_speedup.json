@@ -1,0 +1,119 @@
+[
+  {
+    "agent_id": "claude_sonnet_46",
+    "tasks": {
+      "TT-1": {
+        "BLIND": {
+          "n_rounds": 3,
+          "rounds_to_admissible": 3,
+          "converged": true,
+          "final_prediction_mpa": 37.0,
+          "final_error_mpa": 3.0,
+          "safety_margin_mpa": 0.67,
+          "oscillations": 1,
+          "mi_pred_physics": 0.0,
+          "predictions_per_round": [
+            25.0,
+            30.0,
+            37.0
+          ],
+          "admitted_per_round": [
+            false,
+            false,
+            true
+          ],
+          "total_tokens": 262,
+          "total_api_cost_usd": 3.6e-05,
+          "tokens_to_admissible": 262,
+          "cost_to_admissible_usd": 3.6e-05,
+          "avg_gate_latency_us": 11.8,
+          "avg_round_latency_ms": null,
+          "gate_overhead_ratio": null
+        },
+        "GATED": {
+          "n_rounds": 2,
+          "rounds_to_admissible": 2,
+          "converged": true,
+          "final_prediction_mpa": 38.0,
+          "final_error_mpa": 2.0,
+          "safety_margin_mpa": 1.33,
+          "oscillations": 1,
+          "mi_pred_physics": 0.0,
+          "predictions_per_round": [
+            30.0,
+            38.0
+          ],
+          "admitted_per_round": [
+            false,
+            true
+          ],
+          "total_tokens": 191,
+          "total_api_cost_usd": 2.4e-05,
+          "tokens_to_admissible": 191,
+          "cost_to_admissible_usd": 2.4e-05,
+          "avg_gate_latency_us": 11.8,
+          "avg_round_latency_ms": null,
+          "gate_overhead_ratio": null
+        },
+        "speedup": 1.5
+      },
+      "TT-5": {
+        "BLIND": {
+          "n_rounds": 4,
+          "rounds_to_admissible": 4,
+          "converged": true,
+          "final_prediction_mpa": 37.5,
+          "final_error_mpa": 0.0,
+          "safety_margin_mpa": null,
+          "oscillations": 1,
+          "mi_pred_physics": 0.0,
+          "predictions_per_round": [
+            37.5,
+            37.5,
+            37.5,
+            37.5
+          ],
+          "admitted_per_round": [
+            false,
+            false,
+            false,
+            true
+          ],
+          "total_tokens": 346,
+          "total_api_cost_usd": 4.8e-05,
+          "tokens_to_admissible": 346,
+          "cost_to_admissible_usd": 4.8e-05,
+          "avg_gate_latency_us": 11.8,
+          "avg_round_latency_ms": null,
+          "gate_overhead_ratio": null
+        },
+        "GATED": {
+          "n_rounds": 2,
+          "rounds_to_admissible": 2,
+          "converged": true,
+          "final_prediction_mpa": 37.5,
+          "final_error_mpa": 0.0,
+          "safety_margin_mpa": null,
+          "oscillations": 1,
+          "mi_pred_physics": 0.0,
+          "predictions_per_round": [
+            37.5,
+            37.5
+          ],
+          "admitted_per_round": [
+            false,
+            true
+          ],
+          "total_tokens": 200,
+          "total_api_cost_usd": 2.4e-05,
+          "tokens_to_admissible": 200,
+          "cost_to_admissible_usd": 2.4e-05,
+          "avg_gate_latency_us": 11.8,
+          "avg_round_latency_ms": null,
+          "gate_overhead_ratio": null
+        },
+        "speedup": 2.0
+      }
+    }
+  }
+]

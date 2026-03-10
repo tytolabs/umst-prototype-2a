@@ -9,7 +9,7 @@
 //!
 //!   (f ● g)(x) = μ(M(f)(g(x)))  ⟹  D_int((f ● g)(x)) ≥ 0
 //!
-//! This is the Rust implementation backing Paper 3's categorical safety
+//! This is the Rust implementation backing the categorical safety
 //! guarantee. The formal proofs (monad laws, subject reduction, N-step
 //! admissibility) live in `umst-formal/` (Agda, Coq, Lean 4).
 

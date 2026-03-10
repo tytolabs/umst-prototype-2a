@@ -44,8 +44,8 @@ pub struct EpistemicState {
 
 /// ODE-trajectory MI estimate returned by `trajectory_mi`.
 ///
-/// Closes Paper 2 claim: π*(s) = arg max I(X; Y | a, ODE trajectory).
-/// `traj_mi` is the MI estimated along the Neural ODE trajectory (Paper 2 compliant);
+/// Closes claim: π*(s) = arg max I(X; Y | a, ODE trajectory).
+/// `traj_mi` is the MI estimated along the Neural ODE trajectory;
 /// `static_mi` is the baseline histogram MI (pre-existing hardcoded estimate).
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OdeMiEstimate {
@@ -61,7 +61,7 @@ pub struct OdeMiEstimate {
 
 /// Formal Epistemic Selector trait.
 ///
-/// Closely aligns with the Paper 2 definition: π*(s) = arg max I(X; Y | a).
+/// Implements π*(s) = arg max I(X; Y | a).
 /// Structurally, this is the right adjoint to the structuring operator,
 /// selecting the measurement that maximizes information gain per unit effort.
 pub trait EpistemicSelector {
@@ -85,7 +85,7 @@ pub struct EpistemicProxySelector {
     /// Thermodynamic filter (existing component) - kept for Vision V8 completeness
     _thermo_filter: ThermodynamicFilter,
 
-    /// Neural ODE actor (Paper 2: LTC continuous-time dynamics).
+    /// Neural ODE actor (LTC continuous-time dynamics).
     /// Provides trajectory-based MI estimation.
     liquid_actor: LiquidActor,
 
@@ -329,14 +329,14 @@ impl EpistemicProxySelector {
 }
 
 impl EpistemicProxySelector {
-    /// ODE-trajectory MI for a proxy (Paper 2 compliant).
+    /// ODE-trajectory MI for a proxy.
     ///
     /// Converts the current epistemic state to a vector, runs the LiquidActor
     /// Neural ODE for 20 steps, extracts the trajectory component for this proxy,
     /// and estimates I(X; Y | ODE trajectory) as the trajectory variance
     /// weighted by current uncertainty.
     ///
-    /// This closes the Paper 2 gap: MI is now conditioned on ODE dynamics
+    /// MI is now conditioned on ODE dynamics
     /// rather than static Pearson correlations.
     pub fn trajectory_mi(&self, proxy_id: &str) -> OdeMiEstimate {
         // Build state vector: [uncertainty_proxy_0, ..., uncertainty_proxy_N]
@@ -393,7 +393,7 @@ impl EpistemicProxySelector {
 
     /// Calculate expected information gain for proxy selection (cost-aware).
     ///
-    /// Uses ODE-trajectory MI as the primary signal (Paper 2) and falls back
+    /// Uses ODE-trajectory MI as the primary signal and falls back
     /// to the static estimate when `traj_mi` is negligibly small (cold start).
     fn calculate_expected_information_gain(&self, proxy_id: &str) -> f64 {
         let ode_est = self.trajectory_mi(proxy_id);

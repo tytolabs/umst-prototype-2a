@@ -1,0 +1,23 @@
+[package]
+name = "foundation_benchmarks"
+version = "0.1.0"
+edition = "2021"
+authors = ["Santhosh Shyamsundar", "Santosh Prabhu Shenbagamoorthy", "Studio Tyto"]
+description = "Foundation-level benchmarks: LLM decision audit and VLA trajectory simulation against the DUMSTO constitutional gate."
+license = "MIT"
+
+[dependencies]
+umst-core = { path = "../core" }
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4.0", features = ["derive"] }
+
+[[bin]]
+name = "foundation_decision_audit"
+path = "src/bin/foundation_decision_audit.rs"
+
+[[bin]]
+name = "vla_trajectory_sim"
+path = "src/bin/vla_trajectory_sim.rs"

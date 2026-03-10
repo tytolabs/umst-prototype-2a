@@ -786,7 +786,7 @@ pub struct CellResult {
     pub can_attempt: bool,
     /// Mean wall-clock gate latency in microseconds (from Instant timing per call).
     /// Direct energy cannot be sampled per-call on macOS without sudo; latency acts as
-    /// a proxy consistent with Paper 4's RAPL methodology (higher latency → more compute).
+    /// a proxy consistent with the RAPL methodology (higher latency → more compute).
     pub gate_latency_us_mean: f64,
 }
 
@@ -799,7 +799,7 @@ pub struct ConvergenceComparison {
     pub convergence_speedup: f64, // N_ungated / N_gated
     pub ppo_gated_curve: Vec<ConvergencePoint>,
     pub ppo_ungated_curve: Vec<ConvergencePoint>,
-    /// Entropic Vanishing (Paper 5, Def. 4): σ_φ > α for the ungated agent.
+    /// Entropic Vanishing (Def. 4): σ_φ > α for the ungated agent.
     /// σ_φ = (1 − volume_fraction) × n_constraints  [entropic drift rate]
     /// α   = 0.12 × volume_fraction / n_constraints  [constitutional growth rate]
     /// When true, the ungated PPO diffuses irreversibly into the inadmissible manifold.
@@ -812,7 +812,7 @@ pub struct ConvergenceComparison {
     /// to ~0 at convergence as both signals stabilise.  Final MI is always ≈0.
     pub peak_mi_gated: f64,
     pub peak_mi_ungated: f64,
-    /// Step at which peak MI was observed (for Paper 2 Fig. curves).
+    /// Step at which peak MI was observed (for convergence curves).
     pub peak_mi_gated_step: u64,
     pub peak_mi_ungated_step: u64,
 }
@@ -971,7 +971,7 @@ fn main() {
             1.0
         };
 
-        // Entropic Vanishing (Paper 5, Definition 4)
+        // Entropic Vanishing (Definition 4)
         // σ_φ: entropic drift rate = (1 − volume_fraction) × n_constraints
         //         (probability of being in inadmissible zone × constraint count)
         // α:   constitutional growth rate = 0.12 × volume_fraction / n_constraints
@@ -1092,6 +1092,5 @@ fn main() {
 
     let elapsed = t_start.elapsed();
     println!("\n  Elapsed: {:.2}s", elapsed.as_secs_f64());
-    println!("\n  Use scripts/plot_complexity_matrix.py to generate Paper 2 figures.");
-    println!("  Data source for Paper 2 Table: proof_of_claim_matrix.json");
+    println!("\n  Data source: proof_of_claim_matrix.json");
 }

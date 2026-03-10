@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 // SPDX-License-Identifier: MIT
-//! Exp 2: Sequential Autopoiesis & The Axiological Veto (Paper 3)
+//! Exp 2: Sequential Autopoiesis & The Axiological Veto
 //!
 //! Simulates a 3D concrete printer nozzle extruding material.
 //! At step 15, a "clogging" fault is injected (clogging_factor → 0.85).
@@ -243,7 +243,7 @@ fn run_constrained(max_steps: usize) -> (Vec<(usize, f64, f64, bool)>, Option<St
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╔══════════════════════════════════════════════════════════════════════╗");
-    println!("║  DUMSTO: Exp 2 – Sequential Autopoiesis & Axiological Veto (Paper 3) ║");
+    println!("║  DUMSTO: Exp 2 – Sequential Autopoiesis & Axiological Veto            ║");
     println!("╚══════════════════════════════════════════════════════════════════════╝");
     println!();
     println!("Simulation: 3D concrete printer extrusion with injected clogging fault.");
@@ -274,7 +274,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // ─── Theorem Validation ─────────────────────────────────────────────────
-    println!("🔬 Theorem Validation (Exp 2 — Paper 3):");
+    println!("🔬 Theorem Validation (Exp 2 — Axiological Veto):");
 
     let theorem_5_passed = overloaded_steps.len() > 5;
     println!(
