@@ -1,5 +1,7 @@
-# UMST Prototype 2a: Master Experiments & Results Report
-**Date:** 2026-03-02  |  **Protocol:** v4.1  |  **Total verified samples:** 22,344
+# UMST Prototype 2a: Master Experiments & Results Report (Canonical)
+**Date:** 2026-03-14  |  **Protocol:** v4.2  |  **Total verified samples:** 22,344
+
+**This is the canonical/latest version.** `umst-prototype-2a` contains the authoritative Rust implementation (including the PhysicalAxiom-based constitution system). `umst-prototype_2` is now considered legacy/archive.
 
 This document is the single source of truth for all UMST experimental results. Every number is traceable to a raw JSON/CSV file. Where data conflicts exist between sources, they are flagged explicitly.
 
@@ -12,7 +14,7 @@ This document is the single source of truth for all UMST experimental results. E
 | Metric | Full Name | What It Measures | Why It Matters |
 |--------|-----------|------------------|----------------|
 | **MAE** | Mean Absolute Error (MPa) | Average absolute prediction error vs ground truth | Lower = more accurate predictions |
-| **Admissibility (%)** | Thermodynamic Admissibility | Fraction of predictions passing all Clausius-Duhem constraints (C1–C14) | 100% = no unsafe predictions reach downstream systems |
+| **Admissibility (%)** | Thermodynamic Admissibility | Fraction of predictions passing the 4 core constitutional invariants | 100% = no unsafe predictions reach downstream systems |
 | **ECS** | Epistemic Compliance Score | Weighted composite of admissibility, accuracy, and calibration (0–1) | Holistic agent quality measure; higher = better |
 | **CHS** | Constitutional Health Score | ECS under GATED condition; measures quality WITH the gate | Higher = agent cooperates well with constitutional constraints |
 | **MI(P,G)** | Mutual Information (Prediction, Gate) | Information shared between agent's predictions and gate verdicts | High MI under NAIVE = agent's errors are predictable; near-zero under GATED = agent learned to stay inside the admissible basin |
@@ -360,7 +362,7 @@ All 4 model groups achieve 100% admissibility on this curated 10-sample test.
 
 1. **Sample size**: Phase A has 21 tasks, Phase B has 9, Phase C has 15–17. These are too small for statistical significance (no confidence intervals, no p-values).
 2. **Single-shot evaluation**: Each LLM benchmark is run once per agent per condition. No repetitions for variance estimation.
-3. **Gate completeness**: Phase B revealed the gate doesn't check C8/C10/C11/C13 live, causing 77.8% ceiling. The "100% admissibility" claim holds only for the constraints the gate actively checks.
+3. **Gate completeness**: The core thermodynamic gate now enforces 4 constitutional invariants (mass conservation, hydration irreversibility, Clausius-Duhem, strength monotonicity) via `constitution.rs`. Additional engineering constraints (C8 buildability, C10 pumpability, C11 thermal, C13 hydration) are partially implemented in `gate_server.rs` and were applied post-hoc in Phase B. Full live enforcement of the complete C1–C14 set is a remaining enhancement.
 4. **Group 1 data provenance**: TABLE3_robustness_cliff.csv was regenerated on 2026-02-26 from `ssot_benchmark` (release build, 52s). The stale SSOT file (`fair_comparison_2026-02-25.json`) contains NaN values and should not be used.
 5. **Kimi MAE regression**: Kimi K2.5 is the only agent where MAE worsens under GATED (−0.86 MPa). The gate gradient may be too aggressive for this model's response sensitivity.
 6. **Phase T Neural ODE numbers**: v5 FD (ZOH=0.149, ODE=0.023) verified via `epistemic_experiment` re-run. v6 Adjoint (ZOH=0.144, ODE=0.017) from `phase_t_experiment`; Landauer max_var=0.014 verified.

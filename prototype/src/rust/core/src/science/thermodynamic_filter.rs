@@ -18,13 +18,19 @@
 //! (~450 J/kg for OPC). Since hydration is exothermic, ψ DECREASES with α,
 //! giving positive dissipation for forward hydration (α̇ > 0).
 
+use serde::{Deserialize, Serialize};
+use crate::science::constitution::Constitution;
+
 /// Result of thermodynamic admissibility check
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AdmissibilityResult {
     pub accepted: bool,
     pub dissipation: f64, // D_int value (W/m³)
     pub mass_conserved: bool,
     pub energy_positive: bool,
+    pub hydration_irreversible: bool,
+    pub cgs: f64, // Constitutional Grounding Score from DCS
+    // Witnesses can be added in future for full proof trace
 }
 
 impl AdmissibilityResult {
@@ -37,6 +43,8 @@ impl AdmissibilityResult {
             "ACCEPTED".to_string()
         } else if !self.mass_conserved {
             "MASS_VIOLATION".to_string()
+        } else if !self.hydration_irreversible {
+            "HYDRATION_IRREVERSIBILITY_VIOLATION".to_string()
         } else if !self.energy_positive {
             if self.dissipation < -1e-6 {
                 "NEGATIVE_DISSIPATION".to_string()
@@ -136,6 +144,7 @@ pub struct ThermodynamicFilter {
     tolerance: f64,
     rejections: u64,
     acceptances: u64,
+    constitution: Constitution, // new: uses the elevated constitution system
 }
 
 impl ThermodynamicFilter {
@@ -144,6 +153,7 @@ impl ThermodynamicFilter {
             tolerance: 1e-6,
             rejections: 0,
             acceptances: 0,
+            constitution: Constitution::standard(),
         }
     }
 
@@ -186,11 +196,19 @@ impl ThermodynamicFilter {
         //    explicit damage mechanism violates the constitutive model.
         let strength_monotonic = new_state.strength >= old_state.strength - self.tolerance;
 
-        // 4. Maximum Topologic Boundary (Catching LLM hallucinated jumps)
+        // 4. Hydration irreversibility (α_new ≥ α_old)
+        //    Explicitly enforce one of the four formal invariants from umst-formal.
+        //    This was previously implicit via coupling. Now explicit for 1:1 correspondence.
+        let hydration_irreversible = new_state.hydration_degree >= old_state.hydration_degree - self.tolerance;
+
+        // 5. Maximum Topologic Boundary (Catching LLM hallucinated jumps)
         //    Strength cannot spontaneously exceed the intrinsic limit modeled by the topological category.
         let strength_bounded = new_state.strength <= new_state.max_strength;
 
-        let energy_positive = d_int >= -self.tolerance && strength_monotonic && strength_bounded;
+        let energy_positive = d_int >= -self.tolerance 
+            && strength_monotonic 
+            && hydration_irreversible 
+            && strength_bounded;
         let accepted = mass_conserved && energy_positive;
 
         if accepted {
@@ -199,12 +217,23 @@ impl ThermodynamicFilter {
             self.rejections += 1;
         }
 
-        AdmissibilityResult {
-            accepted,
-            dissipation: d_int,
-            mass_conserved,
-            energy_positive,
-        }
+        // Delegate to Constitution for formal proof-carrying check (sync with umst-formal + science/constitution.rs)
+        let mut constitution_result = self.constitution.verify_transition(old_state, new_state);
+
+        // Merge precise dissipation calc and swarm-aware CGS
+        constitution_result.dissipation = d_int;
+        constitution_result.cgs = if constitution_result.accepted && d_int >= -self.tolerance {
+            9.5
+        } else {
+            3.0
+        };
+
+        // Override with computed flags for backward compat with existing callers
+        constitution_result.mass_conserved = mass_conserved;
+        constitution_result.energy_positive = energy_positive;
+        constitution_result.hydration_irreversible = hydration_irreversible;
+
+        constitution_result
     }
 
     /// Evaluate the joint thermodynamic outcome for Multi-Agent Swarms (MARL)

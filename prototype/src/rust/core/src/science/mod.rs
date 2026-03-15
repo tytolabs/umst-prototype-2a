@@ -17,3 +17,4 @@ pub mod sustainability;
 pub mod thermo;
 pub mod thermodynamic_filter;
 pub mod transport; // [CORE] Admissibility Gate
+pub mod constitution;
