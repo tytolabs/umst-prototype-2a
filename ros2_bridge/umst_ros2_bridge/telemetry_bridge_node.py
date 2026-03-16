@@ -19,6 +19,7 @@ Usage:
 
 import json
 import threading
+import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float32
@@ -78,10 +79,9 @@ class TelemetryBridgeNode(Node):
                 )
                 ws.run_forever()
             except Exception as e:
-                self.get_logger().warn(f"WebSocket error: {e}")
+                self.get_logger().warning(f"WebSocket error: {e}")
 
             if self.running:
-                import time
                 time.sleep(self.reconnect_s)
 
     def _on_ws_message(self, ws, message):
@@ -105,7 +105,7 @@ class TelemetryBridgeNode(Node):
             pass
 
     def _on_ws_error(self, ws, error):
-        self.get_logger().warn(f"WebSocket error: {error}")
+        self.get_logger().warning(f"WebSocket error: {error}")
 
     def _on_ws_close(self, ws, close_status_code, close_msg):
         self.get_logger().info("WebSocket closed — will reconnect")

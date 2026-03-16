@@ -16,7 +16,7 @@ setup(
         (os.path.join("share", package_name, "msg"), glob("msg/*.msg")),
         (os.path.join("share", package_name, "srv"), glob("srv/*.srv")),
     ],
-    install_requires=["setuptools", "requests", "websocket-client"],
+    install_requires=["setuptools<70", "requests", "websocket-client"],
     zip_safe=True,
     author="Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy",
     author_email="santhosh@tyto.studio",

@@ -25,6 +25,7 @@ from rclpy.node import Node
 from std_msgs.msg import String, Bool, Float32, Header
 import requests
 from dataclasses import dataclass
+import time
 
 
 @dataclass
@@ -82,10 +83,10 @@ class GateBridgeNode(Node):
             if self.gate_alive and not was_alive:
                 self.get_logger().info("Gate server connection established")
             elif not self.gate_alive and was_alive:
-                self.get_logger().warn("Gate server health check failed")
+                self.get_logger().warning("Gate server health check failed")
         except requests.exceptions.ConnectionError:
             if self.gate_alive:
-                self.get_logger().warn(
+                self.get_logger().warning(
                     f"Gate server unreachable at {self.gate_url}"
                 )
             self.gate_alive = False
@@ -103,7 +104,7 @@ class GateBridgeNode(Node):
         }
         """
         if not self.gate_alive:
-            self.get_logger().warn(
+            self.get_logger().warning(
                 "Gate server not available — proposal queued until reconnection"
             )
             return
@@ -125,7 +126,11 @@ class GateBridgeNode(Node):
             self.total_rejected += 1
 
         decision_msg = String()
+        decision_id = f"gate_{int(time.time() * 1000)}_{self.total_checks}"
         decision_msg.data = json.dumps({
+            "decision_id": decision_id,
+            "plan_id": payload.get("plan_id", "unknown_plan"),
+            "source": payload.get("source", "system"),
             "admissible": result.admissible,
             "verdict": result.verdict,
             "violation": result.violation,
@@ -133,6 +138,10 @@ class GateBridgeNode(Node):
             "physics_strength": result.physics_strength,
             "hydration_degree": result.hydration_degree,
             "w_c_ratio": result.w_c_ratio,
+            "workspace_radius_m": 1.3,
+            "max_tcp_speed_mps": 0.25,
+            "max_payload_kg": 10.0,
+            "min_confidence": 0.3,
             "stats": {
                 "total": self.total_checks,
                 "accepted": self.total_accepted,
@@ -149,7 +158,7 @@ class GateBridgeNode(Node):
         strength_msg.data = result.physics_strength
         self.pub_strength.publish(strength_msg)
 
-        level = "info" if result.admissible else "warn"
+        level = "info" if result.admissible else "warning"
         getattr(self.get_logger(), level)(
             f"Gate {'ACK' if result.admissible else 'NACK'}: "
             f"{result.verdict} (fc={result.physics_strength:.1f} MPa)"

@@ -4,7 +4,7 @@ UMST ROS2 Bridge — full launch file.
 Starts:
   1. gate_bridge      — REST bridge to Rust gate server
   2. telemetry_bridge — WebSocket bridge for real-time state
-  3. robot_controller — demonstration controller (dry_run by default)
+  3. robot_controller — UR10e demonstration controller (dry_run by default)
 
 Prerequisites:
   cargo run --release --bin gate_server   (from the prototype directory)

@@ -2,6 +2,7 @@
 
 ROS2 package bridging the UMST thermodynamic gate (Rust physics kernel) to the
 ROS2 ecosystem for physics-gated robotic fabrication.
+Target hardware for current experiments: UR10e arm (workspace ~1.3 m, TCP <=0.25 m/s, payload <=10 kg).
 
 ## Architecture
 
@@ -23,10 +24,10 @@ ROS2 ecosystem for physics-gated robotic fabrication.
        ├── /umst/telemetry/temperature (Float32)
        └── /umst/telemetry/hydration   (Float32)
 
-┌─────────────────────┐
-│ robot_controller    │ ←── /umst/decision
+┌────────────────────────────┐
+│ robot_controller (UR10e)   │ ←── /umst/decision
 │  (ROS2 Python)      │
-└──────┬──────────────┘
+└──────┬─────────────────────┘
        ├── /robot/cmd           (String, JSON) — only if admissible
        └── /umst/replan_request (String, JSON) — on rejection
 ```

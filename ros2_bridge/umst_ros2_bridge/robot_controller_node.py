@@ -1,7 +1,7 @@
 """
-UMST Robot Controller Node
-============================
-Demonstration node showing how a robotic fabrication controller integrates
+UMST Robot Controller Node (UR10e)
+==================================
+Demonstration node showing how a UR10e robotic fabrication controller integrates
 with the UMST thermodynamic gate via ROS2. Subscribes to gate decisions
 and translates ACK'd proposals into robot commands.
 
@@ -46,7 +46,7 @@ class RobotControllerNode(Node):
         self.rejections_handled = 0
 
         mode = "DRY RUN" if self.dry_run else "LIVE"
-        self.get_logger().info(f"Robot controller started [{mode}]")
+        self.get_logger().info(f"UR10e robot controller started [{mode}]")
 
     def on_decision(self, msg: String):
         try:
@@ -57,12 +57,23 @@ class RobotControllerNode(Node):
 
         if decision.get("admissible", False):
             self.commands_issued += 1
+            command_id = f"{decision.get('plan_id', 'plan')}-{self.commands_issued}"
             cmd = String()
             cmd.data = json.dumps({
+                "command_id": command_id,
+                "plan_id": decision.get("plan_id", "unknown_plan"),
                 "action": "execute",
+                "source": decision.get("source", "system"),
+                "required_gate_decision_id": decision.get("decision_id", "unknown_decision"),
                 "physics_strength": decision.get("physics_strength", 0.0),
                 "hydration_degree": decision.get("hydration_degree", 0.0),
                 "sequence": self.commands_issued,
+                "safety_envelope": {  # UR10e defaults
+                    "workspace_radius_m": decision.get("workspace_radius_m", 1.3),
+                    "max_tcp_speed_mps": decision.get("max_tcp_speed_mps", 0.25),
+                    "max_payload_kg": decision.get("max_payload_kg", 10.0),
+                    "min_confidence": decision.get("min_confidence", 0.3),
+                },
             })
             if not self.dry_run:
                 self.pub_cmd.publish(cmd)
@@ -79,7 +90,7 @@ class RobotControllerNode(Node):
                 "verdict": decision.get("verdict", ""),
             })
             self.pub_replan.publish(replan)
-            self.get_logger().warn(
+            self.get_logger().warning(
                 f"NACK → replan requested: {decision.get('violation', 'unknown')}"
             )
 

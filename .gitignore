@@ -9,3 +9,9 @@ prototype/src/rust/target/
 .vscode/
 *.swp
 *.swo
+
+# ROS2 build artifacts
+ros2_bridge/build/
+ros2_bridge/install/
+ros2_bridge/log/
+**/__pycache__/
