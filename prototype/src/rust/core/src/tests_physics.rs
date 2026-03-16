@@ -213,3 +213,23 @@ fn test_calibration_bounds() {
         strength_low, strength_high
     );
 }
+
+#[test]
+fn test_constitution_integration() {
+    use crate::science::constitution::Constitution;
+    use crate::science::thermodynamic_filter::ThermodynamicState;
+    println!(" Testing New Constitution Layer Integration");
+
+    let old_state = ThermodynamicState::new();
+    let mut new_state = old_state.clone();
+    new_state.hydration_degree = 0.3;
+    new_state.strength = 25.0;
+
+    let constitution = Constitution::standard();
+    let result = constitution.verify_transition(&old_state, &new_state);
+
+    assert!(result.accepted, "Valid transition should be accepted");
+    assert!(result.cgs > 8.0, "Valid transition should have high CGS");
+
+    println!(" ✓ Constitution integration test passed (CGS: {:.1})", result.cgs);
+}
