@@ -28,7 +28,7 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use serde::{Deserialize, Serialize};
-use smartcore::ensemble::random_forest_regressor::RandomForestRegressor;
+use smartcore::ensemble::random_forest_regressor::{RandomForestRegressor, RandomForestRegressorParameters};
 use smartcore::linalg::basic::matrix::DenseMatrix;
 use std::env;
 use std::fs::File;
@@ -1077,7 +1077,12 @@ fn fit_rf(
     y: Vec<f64>,
 ) -> RandomForestRegressor<f64, f64, DenseMatrix<f64>, Vec<f64>> {
     let mat = DenseMatrix::from_2d_vec(&x).expect("Operation failed");
-    RandomForestRegressor::fit(&mat, &y, Default::default()).expect("Operation failed")
+    RandomForestRegressor::fit(
+        &mat,
+        &y,
+        RandomForestRegressorParameters::default().with_seed(42),
+    )
+    .expect("Operation failed")
 }
 
 fn predict_rf(
@@ -1291,7 +1296,7 @@ fn main() {
     // The policy is untrained (random initialization) — it samples actions from the
     // initial Gaussian policy, providing a well-defined stochastic correction baseline.
     // A seeded agent guarantees the same correction sequence each run.
-    let config = PPOConfig::new();
+    let config = PPOConfig::new().with_seed(42);
     let mut agent = PPOAgent::new(config, RewardType::Balanced);
 
     #[allow(unused_mut, unused_variables)]
@@ -1365,7 +1370,11 @@ fn main() {
     let d1_path = "../../../data/dataset_D1.csv";
     let d1_records = load_csv(d1_path, "UCI-D1");
     if d1_records.is_empty() {
-        panic!("Failed to load UCI-D1 dataset required for GNN-PPO plateau training. Ensure you run this from src/rust (or src/rust/core).");
+        let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        panic!(
+            "Failed to load UCI-D1 dataset. Path ../../../data/dataset_D1.csv not found from CWD {:?}.             Run from prototype/src/rust/core: cd prototype/src/rust/core && cargo run --release --bin ssot_benchmark",
+            cwd
+        );
     }
     let d1_cal = get_calibration("UCI-D1");
 

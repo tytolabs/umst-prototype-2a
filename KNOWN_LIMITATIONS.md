@@ -36,6 +36,21 @@ The following modules are excluded from the prototype because they are not requi
 | `trust` | Trust-region policy optimization (experimental); unused in reported results. |
 | `validation` | Extended cross-validation harness; the benchmark uses its own internal validation. |
 
+## hardware_heat_experiment (Theorem 3)
+
+The Landauer energy experiment uses a fallback hierarchy:
+- **Integrated hardware totals:** macOS + `sudo` (Apple Silicon PMU via continuous powermetrics sampling), or Linux with a readable **RAPL** `energy_uj` counter (phase totals = Δenergy across the constrained and unconstrained runs).
+- **Fallback** (macOS non-root, missing RAPL, CI): FLOP-count / wall-time proxy. Valid for rough algorithm comparison only; not physical proof.
+
+Set **`UMST_HARDWARE_STRICT=1`** (e.g. `env UMST_HARDWARE_STRICT=1 …`) to abort when no hardware counter path is available (no silent fallback).
+
+Do not cite fallback-mode results as hardware thermal evidence. For physical proof, use strict mode plus `sudo` on macOS or Linux with RAPL-capable hardware and successful sysfs reads.
+
+Theorem 8 interpretation caution: plausibility checks must compare like-for-like
+units (`µJ/op` vs `µJ/op`). A historical run compared total `ΔE (µJ)` against a
+per-op reference and can produce misleading out-of-range flags. Use the updated
+binary where Theorem 8 reports `ΔE/op`.
+
 ## Scope of Claims
 
 This prototype is scoped to support the specific claims made in the paper. The following clarifies what the package does and does not demonstrate:

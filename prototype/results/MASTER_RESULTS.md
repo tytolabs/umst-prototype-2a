@@ -5,6 +5,21 @@
 
 This document is the single source of truth for all UMST experimental results. Every number is traceable to a raw JSON/CSV file. Where data conflicts exist between sources, they are flagged explicitly.
 
+## Epistemic Use Policy
+
+When citing from this report, classify statements as:
+
+| Label | Meaning here |
+|---|---|
+| **Established** | Reproducible from linked raw artifacts in this report |
+| **Extension** | Supported in bounded protocols with explicit caveats |
+| **Speculative** | Not directly established by these result files |
+| **Falsifiable** | Has explicit rerun-based pass/fail criteria |
+
+Important: this report contains mixed-scope experiments (different sample sizes,
+conditions, and gate completeness). Do not collapse protocol-scoped outcomes
+into universal claims.
+
 **Last full re-run:** 2026-02-26 — `ssot_benchmark` (52s), `epistemic_experiment` (<1s), all 15+ Rust binaries compile clean.
 
 ---
@@ -36,48 +51,48 @@ This document is the single source of truth for all UMST experimental results. E
 
 | Dataset (n) | XGBoost | MLP | GNN | Physics | H-PINN | Hybrid | PINN | GNN-PPO |
 |-------------|---------|-----|-----|---------|--------|--------|------|---------|
-| UCI-D1 (1030) | 5.11 | 5.03 | 3.70 | 7.74 | 6.24 | **3.13** | 4.69 | 7.76 |
-| UCI-D2 (4891) | 8.72 | 7.86 | 8.23 | 8.46 | 8.38 | **8.09** | 8.42 | 8.48 |
-| UCI-D3 (2780) | 9.06 | 7.93 | **7.76** | 9.26 | 8.80 | 8.58 | 8.85 | 9.29 |
-| UCI-D4 (7445) | 16.62 | **15.66** | 16.49 | 17.33 | 16.38 | 15.99 | 16.64 | 17.36 |
-| UHPC (500) | 15.17 | 15.09 | **4.34** | 97.18 | 74.00 | 15.39 | 77.38 | 97.15 |
-| SELFHEAL (500) | 4.71 | 4.63 | 4.01 | 5.23 | 4.73 | **3.87** | 4.00 | 5.22 |
-| LUNAR (500) | 2.70 | 2.38 | **2.19** | 17.60 | 16.45 | 2.41 | 14.09 | 17.60 |
-| HIGHSCM (500) | 5.77 | 5.75 | **4.35** | 9.68 | 7.23 | 6.62 | 6.42 | 9.72 |
+| UCI-D1 (1030) | 4.88 | 4.27 | 3.80 | 7.74 | 6.23 | **3.22** | 4.57 | 7.73 |
+| UCI-D2 (4891) | 8.11 | 8.82 | 7.57 | 8.46 | 8.24 | **7.76** | 8.08 | 8.47 |
+| UCI-D3 (2780) | 7.99 | 9.10 | **7.07** | 9.26 | 8.50 | 7.87 | 8.15 | 9.29 |
+| UCI-D4 (7445) | 15.49 | 16.48 | **15.24** | 17.33 | 16.11 | 15.51 | 15.67 | 17.36 |
+| UHPC (500) | 20.83 | 13.91 | **5.93** | 97.18 | 72.97 | 21.07 | 77.59 | 97.15 |
+| SELFHEAL (500) | 4.43 | 4.39 | 4.03 | 5.23 | 4.59 | **3.88** | 4.03 | 5.27 |
+| LUNAR (500) | 2.47 | 2.32 | **2.19** | 17.60 | 16.39 | 2.21 | 14.05 | 17.60 |
+| HIGHSCM (500) | 5.84 | 5.98 | **4.34** | 9.68 | 7.09 | 6.86 | 6.40 | 9.67 |
 
-*MAE in MPa. Bold = best per dataset. Source: `TABLE3_robustness_cliff.csv` re-run 2026-02-26.*
+*MAE in MPa. Bold = best per dataset. Rounded from `TABLE3_robustness_cliff.json` (σ = 0); regenerated 2026-03-19 to match `ssot_benchmark`.*
 
 ### 1.2 Admissibility at Noise σ = 0.0
 
 | Dataset | XGBoost | Physics | Hybrid | Agent |
 |---------|---------|---------|--------|-------|
-| UCI-D1 | 82.1% | 82.1% | 82.1% | 82.1% |
-| UCI-D2 | 98.0% | 98.0% | 98.0% | 98.0% |
-| UCI-D3 | 97.2% | 97.2% | 97.2% | 97.2% |
-| UCI-D4 | 98.9% | 98.9% | 98.9% | 98.9% |
-| UHPC | 31.0% | 85.4% | 85.4% | 85.4% |
-| SELFHEAL | 98.2% | 98.2% | 98.2% | 98.2% |
-| LUNAR | 100.0% | 100.0% | 100.0% | 100.0% |
-| HIGHSCM | 95.6% | 95.6% | 95.6% | 95.6% |
+| UCI-D1 | 100.0% | 100.0% | 100.0% | 100.0% |
+| UCI-D2 | 100.0% | 100.0% | 100.0% | 100.0% |
+| UCI-D3 | 100.0% | 100.0% | 100.0% | 100.0% |
+| UCI-D4 | 100.0% | 100.0% | 100.0% | 100.0% |
+| UHPC | 32.4% | 100.0% | 100.0% | 100.0% |
+| SELFHEAL | 100.0% | 100.0% | 100.0% | 100.0% |
+| LUNAR | 98.6% | 100.0% | 100.0% | 100.0% |
+| HIGHSCM | 100.0% | 100.0% | 100.0% | 100.0% |
 
 ### 1.3 Noise Degradation (σ = 0.0 → 0.2)
 
 | Dataset | XGBoost MAE Δ | GNN MAE Δ | Hybrid MAE Δ | Physics MAE Δ |
 |---------|--------------|-----------|--------------|---------------|
-| UCI-D1 | +0.49 (+9.6%) | +0.30 (+8.1%) | +0.46 (+14.7%) | +0.01 (+0.1%) |
-| UCI-D2 | +0.07 (+0.8%) | +0.09 (+1.1%) | +0.02 (+0.2%) | 0.00 (0.0%) |
-| UCI-D3 | +0.12 (+1.3%) | +0.42 (+5.4%) | +0.02 (+0.2%) | +0.03 (+0.3%) |
-| UCI-D4 | +0.40 (+2.4%) | +0.28 (+1.7%) | +0.66 (+4.1%) | +0.01 (+0.1%) |
-| UHPC | +0.11 (+0.7%) | +0.04 (+0.9%) | +0.16 (+1.0%) | 0.00 (0.0%) |
-| SELFHEAL | +0.02 (+0.4%) | +0.01 (+0.2%) | +0.06 (+1.6%) | +0.01 (+0.2%) |
-| LUNAR | −0.01 (−0.4%) | +0.01 (+0.5%) | −0.01 (−0.4%) | 0.00 (0.0%) |
-| HIGHSCM | −0.10 (−1.7%) | −0.01 (−0.2%) | +0.01 (+0.2%) | −0.03 (−0.3%) |
+| UCI-D1 | +0.38 (+7.8%) | +0.22 (+5.8%) | +0.37 (+11.5%) | +0.01 (+0.1%) |
+| UCI-D2 | +0.10 (+1.2%) | +0.22 (+2.9%) | +0.10 (+1.3%) | 0.00 (0.0%) |
+| UCI-D3 | +0.18 (+2.3%) | +0.60 (+8.5%) | +0.19 (+2.4%) | +0.03 (+0.3%) |
+| UCI-D4 | +0.72 (+4.6%) | +0.59 (+3.9%) | +1.27 (+8.2%) | +0.01 (+0.1%) |
+| UHPC | −0.23 (−1.1%) | −0.09 (−1.5%) | −0.25 (−1.2%) | 0.00 (0.0%) |
+| SELFHEAL | +0.10 (+2.3%) | +0.03 (+0.7%) | +0.11 (+2.8%) | +0.01 (+0.2%) |
+| LUNAR | −0.01 (−0.4%) | −0.01 (−0.5%) | −0.01 (−0.5%) | 0.00 (0.0%) |
+| HIGHSCM | +0.05 (+0.9%) | −0.04 (−0.9%) | +0.04 (+0.6%) | −0.03 (−0.3%) |
 
 ### 1.4 Key Findings
-- **Hybrid dominates on UCI-D1** (3.13 MPa) and SELFHEAL (3.87); **GNN dominates** on UCI-D3 (7.76), UHPC (4.34), LUNAR (2.19), HIGHSCM (4.35); **MLP dominates** on UCI-D4 (15.66). No single method wins everywhere.
+- **Hybrid dominates on UCI-D1** (3.22 MPa) and SELFHEAL (3.88); **GNN dominates** on UCI-D3 (7.07), UHPC (5.93), LUNAR (2.19), HIGHSCM (4.34); **GNN also leads** on UCI-D4 (15.24 vs 15.49 XGBoost). No single method wins everywhere.
 - **Physics kernel is noise-invariant**: MAE changes < 0.1% under σ=0.2, confirming hard constraints are immune to input perturbation.
-- **UHPC is the stress-test dataset**: Physics MAE = 97.18 (catastrophic), Hybrid = 15.39, GNN = 4.34. Physics-only methods fail on ultra-high-performance concrete because the Powers gel-space model doesn't capture UHPC's silica fume + steel fibre regime.
-- **Admissibility reflects sample trajectory validity**, not prediction quality. Physics/Hybrid/GNN-PPO share the same per-sample Clausius-Duhem check; XGBoost has an additional prediction range filter [5,120] MPa. UCI-D1 (82.1%) and UHPC (85.4%) show that some sample compositions are thermodynamically marginal under Avrami kinetics.
+- **UHPC is the stress-test dataset**: Physics MAE = 97.18 (catastrophic), Hybrid = 21.07, GNN = 5.93. Physics-only methods fail on ultra-high-performance concrete because the Powers gel-space model doesn't capture UHPC's silica fume + steel fibre regime.
+- **Admissibility reflects sample trajectory validity**, not prediction quality. Exported TABLE3 admissibility (σ = 0) matches `ssot_benchmark` post-hoc checks: UHPC XGBoost remains low (32.4%) while physics-backed rows stay at 100% where the trajectory gate passes; LUNAR XGBoost is 98.6% (see JSON for exact floats).
 
 ### 1.5 Limitations (Group 1)
 - **Admissibility is computed post-hoc** on sample curing trajectories, not enforced during training (except for PPO/Hybrid). Physics/Hybrid/GNN-PPO share the same trajectory-level check.

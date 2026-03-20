@@ -2,8 +2,25 @@
 
 **Paper:** "Towards Unified Material-State Tensors: Epistemic Sensing Architecture for Physics-Constrained Material Characterization"
 **Generated:** 2026-03-05
-**Build verified:** cargo build --release (PASS), ssot_benchmark (PASS — 18,146 samples, 8 datasets, 3 noise levels)
+**Build verified:** cargo build --release (PASS), ssot_benchmark (PASS — 18,146 samples in TABLE3 benchmark split, 8 datasets, 3 noise levels)
 **Total:** 116 files, ~5.8 MB (excluding build artifacts)
+
+**Sample-count reconciliation:** `18,146` is the row count of the eight CSVs in `prototype/data/` used by `ssot_benchmark` (TABLE3 / Group 1). `prototype/results/MASTER_RESULTS.md` reports **22,344** as a broader “verified samples” total across additional experiments and JSON-backed runs — use the label that matches the claim (benchmark CSVs vs full master report).
+
+## Claim Usage Guardrails
+
+This manifest is an audit index, not a universal proof document. Use these labels
+when transferring results to manuscripts:
+
+| Label | Interpretation |
+|---|---|
+| **Established** | Traceable to executable artifacts in this package |
+| **Extension** | Supported in specific protocols with explicit bounds |
+| **Speculative** | Not directly established by package artifacts |
+| **Falsifiable** | Has clear rerun-based pass/fail criteria |
+
+For canonical numeric claims and caveats, prioritize
+`prototype/results/MASTER_RESULTS.md` over historical/stale files.
 
 ## Audit Legend
 
@@ -31,7 +48,7 @@
 | `prototype/data/dataset_selfheal.csv` | 76K | 500 | [TRUTH][FORMAT][I/O] | PASS |
 | `prototype/data/dataset_highscm.csv` | 75K | 500 | [TRUTH][FORMAT][I/O] | PASS |
 
-**Total: 18,146 samples (matches paper claim)**
+**Total: 18,146 samples in benchmark datasets listed here (matches dataset claim in Paper 2 context).**
 **Column format:** cement,slag,fly_ash,water,superplasticizer,coarse_agg,fine_agg,age,strength,source,temperature,humidity
 
 ## Canonical Results (3 files)
@@ -178,6 +195,7 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 | `MANIFEST.md` | 12.6K | [ATTR][FORMAT] | PASS — this file; complete audit manifest |
 | `LICENSE` | 1.4K | [ATTR] | PASS — MIT, named authors |
 | `REPRODUCE.md` | 1.7K | [TRUTH][FORMAT] | PASS — build + run instructions |
+| `REPRODUCIBILITY_AUDIT.md` | — | [TRUTH][FORMAT] | PASS — reproducibility checklist + command evidence |
 | `KNOWN_LIMITATIONS.md` | 2.0K | [TRUTH] | PASS — PPO NaN, calibration caveats match code |
 | `requirements.txt` | 321B | [QUALITY] | PASS — numpy, matplotlib, pandas, litellm |
 | `prototype/docs/1_Architecture.md` | 8.2K | [ATTR][FORMAT] | PASS — FP architecture, science engines, data flow |
@@ -197,6 +215,10 @@ FP annotation: `boundary` = I/O at system edge (only place side effects are perm
 | SPDX and attribution compliance | PASS (MIT headers on all source files) |
 | Total files | 116 |
 | Package size | ~5.8 MB |
+
+Interpretation note: PASS indicates reproducibility of the referenced pipeline
+in this package configuration; it should not be interpreted as global validity
+beyond reported protocol scope.
 
 ## FP Architecture Summary
 

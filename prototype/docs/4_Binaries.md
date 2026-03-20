@@ -115,8 +115,19 @@ These binaries reproduce the core results reported in the paper.
   respect the Landauer limit (kT ln 2 per bit erasure)
 - Reports energy efficiency metrics
 
+**Energy source hierarchy (strict → fallback)**:
+- **macOS + root**: Real Apple Silicon PMU via `powermetrics` — run with `sudo`
+- **Linux**: Real sysfs RAPL energy counters (Intel/AMD)
+- **Fallback** (macOS non-root, CI): FLOP-count proxy (4.5 µJ/µs). Valid for
+  algorithm comparison only; not physical proof. The binary prints which mode
+  is active at startup.
+
 **Usage**:
 ```bash
+# Strict no-fallback mode (real hardware power) on macOS:
+sudo ./target/release/hardware_heat_experiment
+
+# Fallback mode (non-root):
 ./target/release/hardware_heat_experiment
 ```
 

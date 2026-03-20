@@ -21,14 +21,28 @@ concrete and cementitious material families.
 **Key contributions:**
 
 - A Rust physics kernel comprising 15 thermodynamic and rheological science
-  engines (27,542 LOC) with 100% thermodynamic admissibility enforced via the
-  Clausius-Duhem inequality gate.
-- An epistemic sensing module using mutual information for optimal sensor
-  selection, achieving a 60% reduction in required measurements compared to
-  random selection.
-- Demonstrated 88% timing error reduction, 71-fold safety margin improvement,
-  and 3.5x Cohen's d effect size across 18,146 samples spanning 8 material
-  families.
+  engines (27,542 LOC). In evaluated benchmark protocols, gate-checked outputs
+  satisfy 100% admissibility for the reported tasks.
+- An epistemic sensing module using mutual information for proxy/sensor
+  selection. In the reported benchmark, this yields about a 60% reduction in
+  required measurements versus random ordering.
+- Reported Phase-T tracking and benchmark metrics include about 88% timing error
+  reduction, a 71-fold margin relative to the specified threshold, and large
+  effect sizes on the benchmark suite. See `prototype/results/MASTER_RESULTS.md`
+  for experiment-scoped values, caveats, and known limitations.
+
+## Epistemic Taxonomy for Claims
+
+Use this package with the following claim labels:
+
+| Label | Meaning |
+|---|---|
+| **Established** | Reproduced by executable benchmark artifacts in this package |
+| **Extension** | New application with bounded evidence and explicit caveats |
+| **Speculative** | Motivated hypothesis not resolved by package evidence alone |
+| **Falsifiable** | Has explicit pass/fail criteria and can be contradicted by reruns |
+
+Important: avoid promoting experiment-scoped outcomes to universal claims.
 
 ## Directory Structure
 
@@ -77,8 +91,16 @@ cargo build --release
 
 **Step 3 — Run the primary benchmark:**
 
+`ssot_benchmark` resolves datasets and writes `prototype/results/canonical/tables/` using paths relative to **`prototype/src/rust/core`**. Run it via cargo from that directory (do not invoke the binary from the repo root unless you `cd` there first):
+
 ```bash
-./prototype/src/rust/target/release/ssot_benchmark
+cd prototype/src/rust/core && cargo run --release --bin ssot_benchmark
+```
+
+Equivalent after a release build:
+
+```bash
+cd prototype/src/rust/core && ../../target/release/ssot_benchmark
 ```
 
 For the full reproduction workflow (all experiments, tables, and figures), see
@@ -113,9 +135,11 @@ Results reproduced by running `ssot_benchmark` across four material domains:
 | UHPC    | 5.44 MPa           | 4.92 MPa   | 0.673 | 100%          |
 | HIGHSCM | 6.12 MPa           | 5.61 MPa   | 0.648 | 100%          |
 
-All predictions satisfy 100% thermodynamic admissibility via the
-Clausius-Duhem inequality gate. See `prototype/results/` for full canonical
-tables and [REPRODUCE.md](REPRODUCE.md) for reproduction steps.
+For the reported benchmark domains, gate-checked predictions satisfy 100%
+admissibility under the configured constraints. See
+`prototype/results/MASTER_RESULTS.md` and `prototype/results/` for canonical
+tables, caveats, and experiment-specific scope. Use [REPRODUCE.md](REPRODUCE.md)
+for reproduction steps.
 
 ## Architecture
 
@@ -132,8 +156,8 @@ Three core subsystems:
    mapping material state tensors to predicted properties.
 
 2. **Thermodynamic Gate** — Clausius-Duhem inequality enforcement layer that
-   vetoes any prediction violating the second law of thermodynamics, ensuring
-   100% admissibility across all outputs.
+   vetoes predictions that violate configured constitutional checks; reported
+   admissibility is **protocol- and method-specific** (see `MASTER_RESULTS.md` and TABLE3 exports).
 
 3. **Epistemic Sensing** — Mutual-information-based sensor selection that
    identifies the most informative measurements, reducing required sensors

@@ -17,7 +17,10 @@ use super::state::{RLAction, RLState};
 use crate::physics_kernel::{PhysicsConfig, PhysicsKernel};
 use crate::science::thermodynamic_filter::{ThermodynamicFilter, ThermodynamicState};
 use crate::tensors::MixTensor;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use rand::Rng;
+use std::cell::RefCell;
 use serde::{Deserialize, Serialize};
 
 /// Cache produced by `GNNNetwork::forward_with_cache`:
@@ -186,6 +189,9 @@ pub struct PPOConfig {
     // [StackOpt] Meta-Optimization Parameters
     pub meta_stability_threshold: f64, // e.g., 0.8 (Safety factor)
     pub meta_adaptive_rate: f64,       // Rate of hyperparameter adaptation
+
+    /// Optional seed for reproducible Agent MAE (e.g. benchmark). None = use thread_rng.
+    pub seed: Option<u64>,
 }
 
 impl PPOConfig {
@@ -202,7 +208,15 @@ impl PPOConfig {
             // [StackOpt] Defaults
             meta_stability_threshold: 1.2, // Min K_IC or Factor of Safety
             meta_adaptive_rate: 0.05,
+
+            seed: None,
         }
+    }
+
+    /// Set seed for reproducible benchmark (Agent MAE).
+    pub fn with_seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
     }
 }
 
@@ -256,20 +270,24 @@ pub struct GNNNetwork {
 
 impl GNNNetwork {
     pub fn new(hidden_dim: usize, out_dim: usize) -> Self {
-        let init_gnn = || (rand::thread_rng().gen::<f64>() - 0.5) * 0.1;
-        let init_out =
-            || (rand::thread_rng().gen::<f64>() - 0.5) * (2.0 / (hidden_dim as f64).sqrt());
-        // Attention params: Xavier initialisation for the attention vector
-        let init_attn = || (rand::thread_rng().gen::<f64>() - 0.5) * 0.02;
+        Self::new_with_seed(hidden_dim, out_dim, 0)
+    }
+
+    /// Deterministic initialization for reproducible benchmarks.
+    pub fn new_with_seed(hidden_dim: usize, out_dim: usize, seed: u64) -> Self {
+        let mut rng = SmallRng::seed_from_u64(seed);
+        let init_gnn = |r: &mut SmallRng| (r.gen::<f64>() - 0.5) * 0.1;
+        let init_out = |r: &mut SmallRng| (r.gen::<f64>() - 0.5) * (2.0 / (hidden_dim as f64).sqrt());
+        let init_attn = |r: &mut SmallRng| (r.gen::<f64>() - 0.5) * 0.02;
 
         GNNNetwork {
-            w_self: (0..hidden_dim).map(|_| init_gnn()).collect(),
-            w_neigh: (0..hidden_dim).map(|_| init_gnn()).collect(),
+            w_self: (0..hidden_dim).map(|_| init_gnn(&mut rng)).collect(),
+            w_neigh: (0..hidden_dim).map(|_| init_gnn(&mut rng)).collect(),
             b_gnn: vec![0.0; hidden_dim],
-            w_out: (0..hidden_dim * out_dim).map(|_| init_out()).collect(),
+            w_out: (0..hidden_dim * out_dim).map(|_| init_out(&mut rng)).collect(),
             b_out: vec![0.0; out_dim],
-            w_a_self: (0..hidden_dim).map(|_| init_attn()).collect(),
-            w_a_neigh: (0..hidden_dim).map(|_| init_attn()).collect(),
+            w_a_self: (0..hidden_dim).map(|_| init_attn(&mut rng)).collect(),
+            w_a_neigh: (0..hidden_dim).map(|_| init_attn(&mut rng)).collect(),
             hidden_dim,
             out_dim,
         }
@@ -632,6 +650,9 @@ pub struct PPOAgent {
     actor_gnn: GNNNetwork,
     critic_gnn: GNNNetwork,
 
+    /// Seeded RNG for deterministic select_action when config.seed is Some.
+    rng: Option<RefCell<SmallRng>>,
+
     // Experience buffer
     buffer: Vec<Experience>,
 
@@ -655,13 +676,27 @@ pub struct PPOAgent {
 impl PPOAgent {
     pub fn new(ppo_config: PPOConfig, reward_type: RewardType) -> PPOAgent {
         let reward_config = RewardConfig::new(reward_type);
+        let (actor_gnn, critic_gnn, rng) = match ppo_config.seed {
+            Some(seed) => (
+                GNNNetwork::new_with_seed(16, 9, seed),
+                GNNNetwork::new_with_seed(16, 2, seed.wrapping_add(1)),
+                Some(RefCell::new(SmallRng::seed_from_u64(seed.wrapping_add(2)))),
+            ),
+            None => (
+                GNNNetwork::new(16, 9),
+                GNNNetwork::new(16, 2),
+                None,
+            ),
+        };
 
         PPOAgent {
             config: ppo_config,
             reward_function: RewardFunction::new(reward_config),
 
-            actor_gnn: GNNNetwork::new(16, 9), // 16 hidden dims, 9 actions
-            critic_gnn: GNNNetwork::new(16, 2), // [Phase M2] 16 hidden dims, 2 outputs (V(s) + heat_proxy)
+            actor_gnn,
+            critic_gnn,
+
+            rng,
 
             buffer: Vec::with_capacity(1024),
             total_steps: 0,
@@ -683,11 +718,19 @@ impl PPOAgent {
         let state_vec = state.to_vector();
         let action_probs = self.actor_gnn.forward(&state_vec, true);
 
-        // Sample from Gaussian policy
-        let action_vec: Vec<f64> = action_probs
-            .iter()
-            .map(|&mean| mean + 0.1 * rand_normal()) // Add noise for exploration
-            .collect();
+        // Sample from Gaussian policy (seeded when config.seed is Some for reproducibility)
+        let action_vec: Vec<f64> = if let Some(ref r) = self.rng {
+            let mut rng = r.borrow_mut();
+            action_probs
+                .iter()
+                .map(|&mean| mean + 0.1 * rand_normal_seeded(&mut *rng))
+                .collect()
+        } else {
+            action_probs
+                .iter()
+                .map(|&mean| mean + 0.1 * rand_normal())
+                .collect()
+        };
 
         RLAction::from_vector(&action_vec)
     }
@@ -1344,6 +1387,13 @@ impl PPOAgent {
 fn rand_normal() -> f64 {
     // Box-Muller transform using standard RNG
     let mut rng = rand::thread_rng();
+    let u1: f64 = rng.gen::<f64>().max(1e-10);
+    let u2: f64 = rng.gen();
+    (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+}
+
+/// Deterministic Box-Muller for reproducible benchmarks.
+fn rand_normal_seeded<R: rand::Rng>(rng: &mut R) -> f64 {
     let u1: f64 = rng.gen::<f64>().max(1e-10);
     let u2: f64 = rng.gen();
     (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()

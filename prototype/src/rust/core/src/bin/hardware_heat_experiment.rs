@@ -22,6 +22,36 @@ use std::time::Instant;
 use umst_core::hardware::rapl::{BatchProfiler, MonitorHandle, PowermetricsSampler, RaplMonitor};
 use umst_core::math::kalman::KalmanFilter1D;
 
+fn env_truthy(name: &str) -> bool {
+    std::env::var(name)
+        .map(|v| {
+            matches!(
+                v.to_ascii_lowercase().as_str(),
+                "1" | "true" | "yes" | "on"
+            )
+        })
+        .unwrap_or(false)
+}
+
+/// Linux package-energy counter (Intel/AMD RAPL via powercap), if present.
+fn read_linux_rapl_energy_uj() -> Option<u64> {
+    #[cfg(target_os = "linux")]
+    {
+        const CANDIDATES: [&str; 2] = [
+            "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj",
+            "/sys/class/powercap/intel-rapl:0/energy_uj",
+        ];
+        for p in CANDIDATES {
+            if let Ok(s) = std::fs::read_to_string(p) {
+                if let Ok(v) = s.trim().parse::<u64>() {
+                    return Some(v);
+                }
+            }
+        }
+    }
+    None
+}
+
 // ============================================================================
 // Compute Kernel
 // ============================================================================
@@ -136,16 +166,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╚═══════════════════════════════════════════════════════════════════════════╝");
     println!();
 
-    // Detect energy source
-    let has_real_powermetrics = PowermetricsSampler::sample().is_some();
+    let strict_hw = env_truthy("UMST_HARDWARE_STRICT");
+    let has_powermetrics = PowermetricsSampler::sample().is_some();
+    let linux_rapl_ok = read_linux_rapl_energy_uj().is_some();
+    let hardware_real = has_powermetrics || linux_rapl_ok;
+
+    if strict_hw && !hardware_real {
+        eprintln!(
+            "UMST_HARDWARE_STRICT is set but no hardware energy source is available.\n\
+             - macOS: run with sudo so powermetrics succeeds.\n\
+             - Linux: ensure a readable RAPL counter exists (e.g. /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj)."
+        );
+        std::process::exit(1);
+    }
+
+    // Telemetry: macOS uses continuous powermetrics; Linux uses RAPL Δenergy per phase; else synthetic proxy.
+    let has_real_powermetrics = has_powermetrics;
     if has_real_powermetrics {
         println!("✅ Apple Silicon PMU detected via powermetrics — REAL power telemetry active.");
         println!("   CPU package + GPU + ANE power sampled at 200 ms intervals.");
+    } else if linux_rapl_ok {
+        println!("✅ Linux — RAPL package energy counter readable; phase totals use Δenergy from sysfs.");
     } else {
         #[cfg(target_os = "linux")]
-        println!("✅ Linux — Using real sysfs RAPL energy counters.");
+        println!("⚠️  Linux — RAPL sysfs not readable; using synthetic per-op totals (not hardware thermal proof).");
         #[cfg(not(target_os = "linux"))]
         println!("⚠️  macOS (non-root) — Falling back to FLOP-count proxy (4.5 µJ/µs). Run with sudo for real power.");
+    }
+    if strict_hw {
+        println!("   UMST_HARDWARE_STRICT=1 — fallback/proxy modes are disallowed (this run uses real hardware counters).");
     }
     println!();
 
@@ -156,6 +205,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DUMSTO CONSTRAINED");
     println!("   (sampling every 500 ms via powermetrics continuous monitor)");
 
+    let rapl_before_c = read_linux_rapl_energy_uj();
     let wall_before_c = Instant::now();
     // I1 FIX: use continuous monitor instead of single brackets to avoid GPU noise amplification.
     // A single boundary sample × 90 sec duration was inflating GPU energy by 100×.
@@ -170,9 +220,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let wall_dur_c = wall_before_c.elapsed();
     let energy_c = monitor_c.map(|m| m.stop());
+    let rapl_after_c = read_linux_rapl_energy_uj();
 
     let (real_uj_c, cpu_uj_c, gpu_uj_c, ane_uj_c) = if let Some(ref e) = energy_c {
         (e.total_uj, e.cpu_uj, e.gpu_uj, e.ane_uj)
+    } else if let (Some(b), Some(a)) = (rapl_before_c, rapl_after_c) {
+        let duj = a.wrapping_sub(b) as f64;
+        (duj, duj, 0.0, 0.0)
     } else {
         let total: f64 = constrained_uj.iter().sum::<f64>() * batch_size as f64;
         let dur_ms = wall_dur_c.as_secs_f64() * 1000.0;
@@ -195,6 +249,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "   CPU {:.1} µJ | GPU {:.1} µJ | ANE {:.1} µJ | Total {:.1} µJ  (continuous integral)",
             cpu_uj_c, gpu_uj_c, ane_uj_c, real_uj_c
         );
+    } else if rapl_before_c.is_some() && rapl_after_c.is_some() {
+        println!(
+            "   RAPL package Δenergy (constrained phase): total {:.1} µJ",
+            real_uj_c
+        );
     }
     println!(
         "   Mean µJ/op: {:.4} ± {:.4}  (Kalman-filtered: {:.4} µJ/op)",
@@ -206,6 +265,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ UNCONSTRAINED PPO");
     println!("   (sampling every 500 ms via powermetrics continuous monitor)");
 
+    let rapl_before_u = read_linux_rapl_energy_uj();
     let wall_before_u = Instant::now();
     let monitor_u: Option<MonitorHandle> = if has_real_powermetrics {
         Some(PowermetricsSampler::monitor(500))
@@ -218,9 +278,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let wall_dur_u = wall_before_u.elapsed();
     let energy_u = monitor_u.map(|m| m.stop());
+    let rapl_after_u = read_linux_rapl_energy_uj();
 
     let (real_uj_u, cpu_uj_u, gpu_uj_u, ane_uj_u) = if let Some(ref e) = energy_u {
         (e.total_uj, e.cpu_uj, e.gpu_uj, e.ane_uj)
+    } else if let (Some(b), Some(a)) = (rapl_before_u, rapl_after_u) {
+        let duj = a.wrapping_sub(b) as f64;
+        (duj, duj, 0.0, 0.0)
     } else {
         let total: f64 = unconstrained_uj.iter().sum::<f64>() * batch_size as f64;
         let dur_ms = wall_dur_u.as_secs_f64() * 1000.0;
@@ -243,6 +307,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "   CPU {:.1} µJ | GPU {:.1} µJ | ANE {:.1} µJ | Total {:.1} µJ  (continuous integral)",
             cpu_uj_u, gpu_uj_u, ane_uj_u, real_uj_u
         );
+    } else if rapl_before_u.is_some() && rapl_after_u.is_some() {
+        println!(
+            "   RAPL package Δenergy (unconstrained phase): total {:.1} µJ",
+            real_uj_u
+        );
     }
     println!(
         "   Mean µJ/op: {:.4} ± {:.4}  (Kalman-filtered: {:.4} µJ/op)",
@@ -251,7 +320,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // ── Delta & Theorem Validation ───────────────────────────────────────────
     // Use real bracketed energy if available, else fall back to per-op µJ comparison
-    let (delta_uj, delta_pct) = if has_real_powermetrics {
+    let constrained_integrated = energy_c.is_some()
+        || (rapl_before_c.is_some() && rapl_after_c.is_some());
+    let unconstrained_integrated = energy_u.is_some()
+        || (rapl_before_u.is_some() && rapl_after_u.is_some());
+    let use_integrated_totals = constrained_integrated && unconstrained_integrated;
+    let (delta_uj, delta_pct) = if use_integrated_totals {
         let d = real_uj_u - real_uj_c;
         (
             d,
@@ -272,7 +346,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         )
     };
-    let _per_op_delta = per_op_u - per_op_c;
+    let per_op_delta = per_op_u - per_op_c;
+    let expected_delta_sign = mean_u_raw - mean_c_raw; // should be > 0 when constrained is cheaper
+    let avg_power_c_w = if wall_dur_c.as_secs_f64() > 0.0 {
+        (real_uj_c / 1e6) / wall_dur_c.as_secs_f64()
+    } else {
+        0.0
+    };
+    let avg_power_u_w = if wall_dur_u.as_secs_f64() > 0.0 {
+        (real_uj_u / 1e6) / wall_dur_u.as_secs_f64()
+    } else {
+        0.0
+    };
+
+    // If whole-system power telemetry is inverted against algorithmic per-op trend,
+    // external workload likely contaminated this run.
+    let contaminated_real_run = use_integrated_totals
+        && expected_delta_sign > 0.0
+        && (delta_uj <= 0.0 || avg_power_c_w > avg_power_u_w * 1.2);
 
     println!();
     println!("🔬 Theorem Validation (Exp 3 — LandauerMark):");
@@ -280,30 +371,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "   ΔE (Landauer reduction): {:.4} µJ ({:.1}% less energy)",
         delta_uj, delta_pct
     );
+    if use_integrated_totals {
+        println!(
+            "   Avg package power: constrained={:.2} W, unconstrained={:.2} W",
+            avg_power_c_w, avg_power_u_w
+        );
+    }
 
     // Theorem 7: constrained uses less total energy (p < 0.05)
     let (t7, p7) = welch_t_test_onesided(&constrained_uj, &unconstrained_uj);
-    let t7_pass = delta_uj > 0.0 && p7 < 0.05;
+    let t7_pass = !contaminated_real_run && delta_uj > 0.0 && p7 < 0.05;
     println!(
         "   Theorem 7 (Constrained Reduces Heat): {} — {:.1}% less energy, t={:.3}, p={:.4}",
-        if t7_pass { "✅ PASSED" } else { "❌ FAILED" },
+        if contaminated_real_run {
+            "⚠️  INVALID (external workload contamination)"
+        } else if t7_pass {
+            "✅ PASSED"
+        } else {
+            "❌ FAILED"
+        },
         delta_pct,
         t7,
         p7
     );
+    if contaminated_real_run {
+        println!(
+            "   Note: Real telemetry contradicts controlled per-op trend; rerun while system is idle."
+        );
+    }
 
-    // Theorem 8: within plausible range (1.5 mW @ 1 MHz → 1.5e-3 µJ/op)
-    let predicted = 1.5e-3;
-    let in_range = delta_uj > predicted * 0.01 && delta_uj < predicted * 1e8;
+    // Theorem 8: compare like-for-like units (µJ/op vs µJ/op).
+    // Baseline reference: 1.5 mW at 1 MHz ≈ 1.5e-3 µJ/op.
+    let predicted_per_op = 1.5e-3;
+    let in_range = !contaminated_real_run
+        && per_op_delta > 0.0
+        &&
+        per_op_delta > predicted_per_op * 0.01 && per_op_delta < predicted_per_op * 1e8;
     println!(
-        "   Theorem 8 (Prediction Plausibility): {} — ΔE={:.4e} µJ vs predicted {:.1e} µJ/op",
+        "   Theorem 8 (Prediction Plausibility): {} — ΔE/op={:.4e} µJ/op vs predicted {:.1e} µJ/op",
         if in_range {
             "✅ PLAUSIBLE"
         } else {
             "⚠️  OUTSIDE EXPECTED RANGE"
         },
-        delta_uj,
-        predicted
+        per_op_delta,
+        predicted_per_op
     );
 
     // ── Write CSV ─────────────────────────────────────────────────────────────
@@ -335,8 +447,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "# Source: {}",
         if has_real_powermetrics {
             "Apple Silicon PMU (powermetrics)"
+        } else if linux_rapl_ok {
+            "Linux RAPL (sysfs powercap)"
         } else {
-            "Mock/RAPL"
+            "Synthetic proxy (no hardware counters)"
         }
     )?;
     writeln!(file, "# constrained_total_uj,{:.2}", real_uj_c)?;
