@@ -13,10 +13,11 @@ Architecture:
                                          /gate_check (service)  → On-demand queries
 
 Requires:
-    cargo run --release --bin gate_server   (Rust side, port 8765)
+    umst-manifold gate_server (default port 8787):
+    UMST_GATE_ADDR=0.0.0.0:8787 cargo run -p umst-manifold --features gate-server --bin gate_server
 
 Usage:
-    ros2 run umst_ros2_bridge gate_bridge --ros-args -p gate_url:=http://localhost:8765
+    ros2 run umst_ros2_bridge gate_bridge --ros-args -p gate_url:=http://localhost:8787
 """
 
 import json
@@ -45,7 +46,7 @@ class GateBridgeNode(Node):
     def __init__(self):
         super().__init__("umst_gate_bridge")
 
-        self.declare_parameter("gate_url", "http://localhost:8765")
+        self.declare_parameter("gate_url", "http://localhost:8787")
         self.declare_parameter("rate_hz", 10.0)
         self.declare_parameter("timeout_s", 1.0)
 
@@ -179,14 +180,35 @@ class GateBridgeNode(Node):
                 return None
 
             data = resp.json()
+            admissible = data.get("admissible", False)
+            if "codes" in data and "verdict" not in data:
+                codes = data.get("codes") or []
+                verdict = (
+                    "ACK (manifold)"
+                    if admissible
+                    else f"NACK (manifold): {', '.join(codes) if codes else 'rejected'}"
+                )
+                catalog = data.get("catalog_hash_hex", "")
+                if catalog:
+                    verdict = f"{verdict} catalog={catalog[:12]}…"
+                violation = "" if admissible else (codes[0] if codes else "rejected")
+                return GateResult(
+                    admissible=admissible,
+                    verdict=verdict,
+                    violation=violation,
+                    strength_bound=0.0,
+                    physics_strength=0.0,
+                    hydration_degree=0.0,
+                    w_c_ratio=0.0,
+                )
             return GateResult(
-                admissible=data.get("admissible", False),
+                admissible=admissible,
                 verdict=data.get("verdict", ""),
-                violation=data.get("violation", ""),
-                strength_bound=data.get("strength_bound", 0.0),
-                physics_strength=data.get("physics_strength", 0.0),
-                hydration_degree=data.get("hydration_degree", 0.0),
-                w_c_ratio=data.get("w_c_ratio", 0.0),
+                violation=data.get("violation", "") or "",
+                strength_bound=float(data.get("strength_bound", 0.0)),
+                physics_strength=float(data.get("physics_strength", 0.0)),
+                hydration_degree=float(data.get("hydration_degree", 0.0)),
+                w_c_ratio=float(data.get("w_c_ratio", 0.0)),
             )
 
         except requests.exceptions.ConnectionError:

@@ -1,24 +1,24 @@
 # UMST ROS2 Bridge
 
-ROS2 package bridging the UMST thermodynamic gate (Rust physics kernel) to the
+ROS2 package bridging the **canonical** UMST thermodynamic gate (`umst-manifold` HTTP server) to the
 ROS2 ecosystem for physics-gated robotic fabrication.
 Target hardware for current experiments: UR10e arm (workspace ~1.3 m, TCP <=0.25 m/s, payload <=10 kg).
 
 ## Architecture
 
 ```
-┌─────────────────────┐     REST POST /gate     ┌──────────────────┐
-│  gate_bridge_node   │ ──────────────────────→  │  Rust Gate Server│
-│  (ROS2 Python)      │ ←────────────────────── │  (port 8765)     │
-└──────┬──────────────┘     JSON response        └──────────────────┘
+┌─────────────────────┐     REST POST /gate     ┌──────────────────────────────┐
+│  gate_bridge_node   │ ──────────────────────→  │  umst-manifold gate_server  │
+│  (ROS2 Python)      │ ←────────────────────── │  (default port 8787)         │
+└──────┬──────────────┘     JSON response        └──────────────────────────────┘
        │
        ├── /umst/decision    (String, JSON)
        ├── /umst/admissible  (Bool)
        └── /umst/physics_strength (Float32)
 
 ┌─────────────────────┐     WebSocket            ┌──────────────────┐
-│ telemetry_bridge    │ ←─────────────────────── │  Rust Telemetry  │
-│  (ROS2 Python)      │                          │  (port 8766)     │
+│ telemetry_bridge    │ ←─────────────────────── │  prototype-only  │
+│  (ROS2 Python)      │                          │  telemetry :8766 │
 └──────┬──────────────┘                          └──────────────────┘
        ├── /umst/telemetry/state       (String)
        ├── /umst/telemetry/temperature (Float32)
@@ -35,21 +35,49 @@ Target hardware for current experiments: UR10e arm (workspace ~1.3 m, TCP <=0.25
 ## Quick Start
 
 ```bash
-# Terminal 1: Start the Rust gate server
-cd prototype && cargo run --release --bin gate_server
+# Terminal 1: Canonical Rust gate (umst-manifold)
+cd ../../umst-manifold   # sibling of umst-prototype-2a in MaOS workspace
+UMST_GATE_ADDR=0.0.0.0:8787 cargo run --features gate-server --bin gate_server
 
 # Terminal 2: Launch the ROS2 bridge (requires ROS2 Humble/Iron/Jazzy)
 source /opt/ros/$ROS_DISTRO/setup.bash
 cd ros2_bridge && colcon build && source install/setup.bash
-ros2 launch umst_ros2_bridge umst_bridge.launch.py
+ros2 launch umst_ros2_bridge umst_bridge.launch.py \
+  --ros-args -p gate_url:=http://localhost:8787
 
-# Terminal 3: Test with a proposal
+# Terminal 3: Test with a proposal (manifold accepts prototype field aliases)
 ros2 topic pub /umst/proposal std_msgs/String "data: '{
   \"cement\": 350, \"water\": 175, \"age\": 28,
   \"predicted_strength\": 35, \"coarse_agg\": 1000,
   \"fine_agg\": 750, \"temperature_c\": 20, \"dataset\": \"D1\"
 }'" --once
 ```
+
+### Legacy prototype gate (informative only)
+
+The historical `umst-core` binary on port **8765** is deprecated for SSOT:
+
+```bash
+cd prototype/src/rust && cargo run -p umst-core --bin gate_server
+```
+
+Prefer manifold for catalog-pinned responses (`catalog_hash_hex`, `codes[]`).
+
+### Local parity CLI (optional)
+
+```bash
+cd prototype/src/rust/core
+cargo run --features manifold-gate --bin manifold_gate_parity <<<'{"cement":400,"water":200,"age":28,"predicted_strength":25}'
+```
+
+## Gate HTTP contract
+
+| Server | Port (default) | `POST /gate` response |
+|--------|----------------|------------------------|
+| **umst-manifold** `gate_server` | 8787 | `{ "admissible", "codes", "catalog_hash_hex" }` |
+| prototype `umst-core` `gate_server` | 8765 | `{ "admissible", "verdict", "physics_strength", … }` |
+
+`gate_bridge_node` maps manifold `codes` into legacy topic fields when `verdict` is absent.
 
 ## Nodes
 
@@ -73,3 +101,8 @@ See `config/bridge_params.yaml` for all configurable parameters.
 
 No robot command is issued unless the thermodynamic gate returns `admissible: true`.
 This is the ROS2-side enforcement of the Clausius-Duhem inequality.
+
+## Further reading
+
+- `umst-manifold/docs/PROTOTYPE_GATE_MAP.md`
+- `umst-prototype/docs/THIN_PROTOTYPE_STATUS.md`

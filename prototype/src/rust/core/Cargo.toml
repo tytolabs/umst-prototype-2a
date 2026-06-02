@@ -34,11 +34,15 @@ rayon = "1.11.0"
 dotenvy = "0.15.7"
 lazy_static = "1.5.0"
 axum = "0.8.8"
+# Sibling SSOT — optional (`manifold-gate`). Default build stays on prototype `umst-core` only.
+umst-manifold = { path = "../../../../../umst-manifold", default-features = false, features = ["ndarray"], optional = true }
 
 [features]
 default = ["ndarray"]
 ndarray = ["burn/ndarray"]
 gpu = ["burn-wgpu"]
+# Burn 0.16 (here) vs 0.13 (`umst-manifold`) — enable only for parity experiments; see docs/THIN_PROTOTYPE_STATUS.md.
+manifold-gate = ["dep:umst-manifold"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -48,6 +52,11 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "gate_server"
 path = "src/bin/gate_server.rs"
+
+[[bin]]
+name = "manifold_gate_parity"
+path = "src/bin/manifold_gate_parity.rs"
+required-features = ["manifold-gate"]
 
 # Theorem experiments (paper-facing, each owns a verified theorem)
 [[bin]]

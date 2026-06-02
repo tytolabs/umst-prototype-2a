@@ -1,7 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Santhosh Shyamsundar, Santosh Prabhu Shenbagamoorthy, and Studio Tyto
 // SPDX-License-Identifier: MIT
 
-//! Thermodynamic Admissibility Filter
+//! Thermodynamic Admissibility Filter (2a lane — **hybrid body**).
+//!
+//! Algorithm 1 SSOT: `umst-manifold/src/gate/mix_proposal.rs` (`gate_dual_run_parity` 8/8 on `umst-prototype` shim).
+//! With feature `manifold-gate`, Clausius–Duhem scalar math delegates to [`ThermodynamicMixFilter`]; 2a-only
+//! layers stay local — see `umst-prototype/docs/THIN_PROTOTYPE_STATUS.md`.
 //!
 //! Enforces the Clausius-Duhem inequality as a hard constraint (Algorithm 1).
 //! Reference: "Towards Unified Material-State Tensors for Physics-Gated AI"
@@ -20,6 +24,11 @@
 
 use serde::{Deserialize, Serialize};
 use crate::science::constitution::Constitution;
+
+#[cfg(feature = "manifold-gate")]
+use umst_manifold::gate::mix_proposal::{
+    ThermodynamicMixFilter, ThermodynamicStateSnapshot, ThermodynamicTransitionOutcome,
+};
 
 /// Result of thermodynamic admissibility check
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -133,6 +142,32 @@ impl ThermodynamicState {
     }
 }
 
+#[cfg(feature = "manifold-gate")]
+fn to_manifold_snapshot(state: &ThermodynamicState) -> ThermodynamicStateSnapshot {
+    ThermodynamicStateSnapshot {
+        density: state.density,
+        temperature: state.temperature,
+        free_energy: state.free_energy,
+        entropy: state.entropy,
+        hydration_degree: state.hydration_degree,
+        strength: state.strength,
+    }
+}
+
+/// Core Algorithm 1 outcome before 2a-only second-law extensions.
+struct Algorithm1Base {
+    mass_conserved: bool,
+    dissipation: f64,
+    strength_monotonic: bool,
+    clausius_ok: bool,
+}
+
+impl Algorithm1Base {
+    fn energy_positive(&self) -> bool {
+        self.clausius_ok && self.strength_monotonic
+    }
+}
+
 /// Thermodynamic Admissibility Filter
 ///
 /// Enforces the Clausius-Duhem inequality (Algorithm 1):
@@ -144,7 +179,9 @@ pub struct ThermodynamicFilter {
     tolerance: f64,
     rejections: u64,
     acceptances: u64,
-    constitution: Constitution, // new: uses the elevated constitution system
+    constitution: Constitution,
+    #[cfg(feature = "manifold-gate")]
+    mix_gate: ThermodynamicMixFilter,
 }
 
 impl ThermodynamicFilter {
@@ -154,7 +191,62 @@ impl ThermodynamicFilter {
             rejections: 0,
             acceptances: 0,
             constitution: Constitution::standard(),
+            #[cfg(feature = "manifold-gate")]
+            mix_gate: ThermodynamicMixFilter::new(),
         }
+    }
+
+    /// Algorithm 1 scalar gate — delegates to manifold SSOT when `manifold-gate` is enabled.
+    fn algorithm1_base(
+        &mut self,
+        old_state: &ThermodynamicState,
+        new_state: &ThermodynamicState,
+        dt: f64,
+    ) -> Algorithm1Base {
+        #[cfg(feature = "manifold-gate")]
+        {
+            let old_s = to_manifold_snapshot(old_state);
+            let new_s = to_manifold_snapshot(new_state);
+            let outcome: ThermodynamicTransitionOutcome =
+                self.mix_gate.check_transition(&old_s, &new_s, dt);
+            let strength_monotonic = new_state.strength >= old_state.strength - self.tolerance;
+            let clausius_ok = outcome.dissipation >= -self.tolerance;
+            Algorithm1Base {
+                mass_conserved: outcome.mass_conserved,
+                dissipation: outcome.dissipation,
+                strength_monotonic,
+                clausius_ok,
+            }
+        }
+        #[cfg(not(feature = "manifold-gate"))]
+        {
+            let mass_conserved = (new_state.density - old_state.density).abs() < 100.0;
+            let rho = (old_state.density + new_state.density) / 2.0;
+            let psi_dot = (new_state.free_energy - old_state.free_energy) / (dt + 1e-10);
+            let d_int = -rho * psi_dot;
+            let strength_monotonic = new_state.strength >= old_state.strength - self.tolerance;
+            let clausius_ok = d_int >= -self.tolerance;
+            Algorithm1Base {
+                mass_conserved,
+                dissipation: d_int,
+                strength_monotonic,
+                clausius_ok,
+            }
+        }
+    }
+
+    /// 2a-only invariants not yet in manifold `ThermodynamicMixFilter` (see THIN_PROTOTYPE_STATUS).
+    fn second_law_extensions(
+        &self,
+        old_state: &ThermodynamicState,
+        new_state: &ThermodynamicState,
+        base: &Algorithm1Base,
+    ) -> (bool, bool) {
+        let hydration_irreversible =
+            new_state.hydration_degree >= old_state.hydration_degree - self.tolerance;
+        let strength_bounded = new_state.strength <= new_state.max_strength + self.tolerance;
+        let _ = base;
+        (hydration_irreversible, strength_bounded)
     }
 
     /// Check if a state transition is thermodynamically admissible.
@@ -163,6 +255,7 @@ impl ThermodynamicFilter {
     ///   1. Compute ψ̇ = (ψ_new − ψ_old) / Δt
     ///   2. Compute D_int = −ρ · ψ̇  (isothermal Clausius-Duhem)
     ///   3. Accept if D_int ≥ −ε AND mass conserved AND strength non-regressing
+    ///   4. (2a) α monotonicity and `max_strength` topology cap
     ///
     /// # Arguments
     /// * `old_state` — Previous thermodynamic state
@@ -174,41 +267,15 @@ impl ThermodynamicFilter {
         new_state: &ThermodynamicState,
         dt: f64,
     ) -> AdmissibilityResult {
-        // 1. Mass conservation: V = M/ρ  (density change bounded)
-        let mass_conserved = (new_state.density - old_state.density).abs() < 100.0;
+        let base = self.algorithm1_base(old_state, new_state, dt);
+        let (hydration_irreversible, strength_bounded) =
+            self.second_law_extensions(old_state, new_state, &base);
 
-        // 2. Clausius-Duhem dissipation (isothermal, no work):
-        //    D_int = −ρ · ψ̇ ≥ 0
-        //
-        //    With ψ(α) = −Q_hyd · α:
-        //      ψ̇ = −Q_hyd · α̇  (negative for forward hydration)
-        //      D_int = −ρ · (−Q_hyd · α̇) = ρ · Q_hyd · α̇
-        //
-        //    Positive when hydration progresses (α̇ > 0).
-        //    Negative when hydration reverses (α̇ < 0) → REJECTED.
-        let rho = (old_state.density + new_state.density) / 2.0;
-        let psi_dot = (new_state.free_energy - old_state.free_energy) / (dt + 1e-10);
-        let d_int = -rho * psi_dot;
-
-        // 3. Strength monotonicity (consequence of 2nd law for non-damage evolution)
-        //    Under the Powers model without damage, strength is monotonically
-        //    non-decreasing with hydration. A strength decrease without an
-        //    explicit damage mechanism violates the constitutive model.
-        let strength_monotonic = new_state.strength >= old_state.strength - self.tolerance;
-
-        // 4. Hydration irreversibility (α_new ≥ α_old)
-        //    Explicitly enforce one of the four formal invariants from umst-formal.
-        //    This was previously implicit via coupling. Now explicit for 1:1 correspondence.
-        let hydration_irreversible = new_state.hydration_degree >= old_state.hydration_degree - self.tolerance;
-
-        // 5. Maximum Topologic Boundary (Catching LLM hallucinated jumps)
-        //    Strength cannot spontaneously exceed the intrinsic limit modeled by the topological category.
-        let strength_bounded = new_state.strength <= new_state.max_strength;
-
-        let energy_positive = d_int >= -self.tolerance 
-            && strength_monotonic 
-            && hydration_irreversible 
+        let energy_positive = base.energy_positive()
+            && hydration_irreversible
             && strength_bounded;
+        let mass_conserved = base.mass_conserved;
+        let d_int = base.dissipation;
         let accepted = mass_conserved && energy_positive;
 
         if accepted {
@@ -217,10 +284,8 @@ impl ThermodynamicFilter {
             self.rejections += 1;
         }
 
-        // Delegate to Constitution for formal proof-carrying check (sync with umst-formal + science/constitution.rs)
         let mut constitution_result = self.constitution.verify_transition(old_state, new_state);
 
-        // Merge precise dissipation calc and swarm-aware CGS
         constitution_result.dissipation = d_int;
         constitution_result.cgs = if constitution_result.accepted && d_int >= -self.tolerance {
             9.5
@@ -228,7 +293,6 @@ impl ThermodynamicFilter {
             3.0
         };
 
-        // Override with computed flags for backward compat with existing callers
         constitution_result.mass_conserved = mass_conserved;
         constitution_result.energy_positive = energy_positive;
         constitution_result.hydration_irreversible = hydration_irreversible;
@@ -251,17 +315,14 @@ impl ThermodynamicFilter {
         let mut combined_new = old_state.clone();
 
         for state in joint_new_states {
-            // Superimpose mass and energy fluxes
             combined_new.density += state.density - old_state.density;
             combined_new.free_energy += state.free_energy - old_state.free_energy;
 
-            // Structural limit is dictated by the weakest localized voxel in the superposition
             if state.strength < combined_new.strength {
                 combined_new.strength = state.strength;
             }
         }
 
-        // Apply the same hard bounds to the mathematical superposition
         self.check_transition(old_state, &combined_new, dt)
     }
 
@@ -292,6 +353,8 @@ impl ThermodynamicFilter {
     pub fn reset_stats(&mut self) {
         self.acceptances = 0;
         self.rejections = 0;
+        #[cfg(feature = "manifold-gate")]
+        self.mix_gate.reset_stats();
     }
 }
 
@@ -303,11 +366,9 @@ mod tests {
     fn test_admissible_hydration() {
         let mut filter = ThermodynamicFilter::new();
 
-        // Forward hydration: α increases from 0.3 to 0.5 at fixed w/c
         let old = ThermodynamicState::from_mix(0.5, 0.3, 293.0);
         let new = ThermodynamicState::from_mix(0.5, 0.5, 293.0);
 
-        // Verify free energy decreases (exothermic)
         assert!(
             new.free_energy < old.free_energy,
             "Free energy must decrease during hydration: ψ_old={}, ψ_new={}",
@@ -329,11 +390,9 @@ mod tests {
     fn test_inadmissible_reverse_hydration() {
         let mut filter = ThermodynamicFilter::new();
 
-        // Reverse hydration: α decreases from 0.7 to 0.3 (forbidden by 2nd law)
         let old = ThermodynamicState::from_mix(0.5, 0.7, 293.0);
         let new = ThermodynamicState::from_mix(0.5, 0.3, 293.0);
 
-        // Verify free energy increases (anti-thermodynamic)
         assert!(
             new.free_energy > old.free_energy,
             "Free energy must increase for reverse hydration (violation)"
@@ -353,13 +412,12 @@ mod tests {
     fn test_strength_monotonicity() {
         let mut filter = ThermodynamicFilter::new();
 
-        // Strength decrease without damage mechanism (inadmissible)
         let mut old = ThermodynamicState::new();
         old.strength = 30.0;
         old.hydration_degree = 0.5;
 
         let mut new = ThermodynamicState::new();
-        new.strength = 25.0; // Decreased!
+        new.strength = 25.0;
         new.hydration_degree = 0.5;
 
         let result = filter.check_transition(&old, &new, 1.0);
@@ -371,7 +429,6 @@ mod tests {
     fn test_filter_statistics() {
         let mut filter = ThermodynamicFilter::new();
 
-        // Run multiple forward hydration transitions
         for i in 0..10 {
             let old = ThermodynamicState::from_mix(0.5, i as f64 * 0.1, 293.0);
             let new = ThermodynamicState::from_mix(0.5, (i + 1) as f64 * 0.1, 293.0);
@@ -388,11 +445,10 @@ mod tests {
     fn test_dissipation_is_rho_times_q_hyd_times_alpha_dot() {
         let mut filter = ThermodynamicFilter::new();
 
-        // Verify D_int = ρ · Q_hyd · α̇ quantitatively
         let w_c = 0.45;
         let alpha_old = 0.4;
         let alpha_new = 0.6;
-        let dt = 7.0 * 86400.0; // 7 days in seconds
+        let dt = 7.0 * 86400.0;
 
         let old = ThermodynamicState::from_mix(w_c, alpha_old, 293.0);
         let new = ThermodynamicState::from_mix(w_c, alpha_new, 293.0);
@@ -413,20 +469,49 @@ mod tests {
 
     #[test]
     fn test_from_mix_calibrated() {
-        // Verify that from_mix_calibrated with different s_intrinsic
-        // changes strength but not free energy
         let state_240 = ThermodynamicState::from_mix_calibrated(0.5, 0.5, 293.0, 240.0);
         let state_80 = ThermodynamicState::from_mix_calibrated(0.5, 0.5, 293.0, 80.0);
 
-        // Same free energy (depends on Q_hyd and alpha, not s_intrinsic)
         assert_eq!(state_240.free_energy, state_80.free_energy);
 
-        // Different strength (proportional to s_intrinsic)
         let ratio = state_240.strength / state_80.strength;
         assert!(
             (ratio - 3.0).abs() < 1e-10,
             "Strength ratio should be 240/80 = 3.0, got {}",
             ratio
         );
+    }
+
+    #[test]
+    fn test_max_strength_topology_rejects_hallucinated_jump() {
+        let mut filter = ThermodynamicFilter::new();
+        let mut old = ThermodynamicState::from_mix(0.5, 0.5, 293.0);
+        let mut new = ThermodynamicState::from_mix(0.5, 0.5, 293.0);
+        old.max_strength = 50.0;
+        new.strength = 200.0;
+        new.max_strength = 50.0;
+
+        let result = filter.check_transition(&old, &new, 1.0);
+        assert!(
+            !result.energy_positive,
+            "strength above max_strength must fail energy_positive"
+        );
+    }
+
+    #[cfg(feature = "manifold-gate")]
+    #[test]
+    fn algorithm1_dissipation_matches_manifold_on_forward_hydration() {
+        let mut filter = ThermodynamicFilter::new();
+        let old = ThermodynamicState::from_mix(0.5, 0.3, 293.0);
+        let new = ThermodynamicState::from_mix(0.5, 0.5, 293.0);
+        let r = filter.check_transition(&old, &new, 3600.0);
+        let mut gate = ThermodynamicMixFilter::new();
+        let gate_r = gate.check_transition(
+            &to_manifold_snapshot(&old),
+            &to_manifold_snapshot(&new),
+            3600.0,
+        );
+        assert!((r.dissipation - gate_r.dissipation).abs() < 1e-12);
+        assert_eq!(r.mass_conserved, gate_r.mass_conserved);
     }
 }

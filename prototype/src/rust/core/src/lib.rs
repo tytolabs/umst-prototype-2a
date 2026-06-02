@@ -17,6 +17,8 @@
 
 pub mod formulas;
 pub mod io;
+#[cfg(feature = "manifold-gate")]
+pub mod manifold_gate_shim;
 pub mod optimization;
 pub mod physics_kernel;
 pub mod rl;

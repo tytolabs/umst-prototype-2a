@@ -1,6 +1,6 @@
 umst_gate_bridge:
   ros__parameters:
-    gate_url: "http://localhost:8765"
+    gate_url: "http://localhost:8787"
     rate_hz: 10.0
     timeout_s: 1.0
 
