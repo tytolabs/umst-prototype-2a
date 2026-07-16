@@ -783,7 +783,7 @@ fn train_ppo_agent_plateau(
             // BUG: agent.optimize() causes NaN weight explosion at ~step 8k
             // (gradient instability in PPO update). select_action is forward-only
             // so GNN-PPO is effectively untrained — MAE tracks Physics MAE.
-            // TODO: fix PPO gradient clipping / learning rate to enable training.
+            // TODO R-exp-ssot-benchmark-tier: fix PPO gradient clipping / learning rate to enable training.
             let _action = agent.select_action(&state);
             let reward = -(compute_physics_strength(r, cal) - r.strength).abs() as f64;
             epoch_rewards.push(reward as f32);
