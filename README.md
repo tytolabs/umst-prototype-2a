@@ -1,3 +1,5 @@
+> **ARCHIVED**: This module is parked and retained for historical reference only. It is not part of the active workspace build.
+
 # UMST Prototype 2a: Epistemic Sensing Architecture
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18940933.svg)](https://doi.org/10.5281/zenodo.18940933)
